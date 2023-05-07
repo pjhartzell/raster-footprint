@@ -1,14 +1,15 @@
-from rasterio.crs import CRS
 from shapely.geometry import shape
-from shapely.geometry.multipolygon import MultiPolygon
-from shapely.geometry.polygon import Polygon, orient
-from xxlimited import foo
+from shapely.geometry.polygon import Polygon
 
-from raster_footprint import RasterFootprint, densify_by_distance, densify_by_factor
+from raster_footprint.raster_footprint import (
+    RasterFootprint,
+    densify_by_distance,
+    densify_by_factor,
+)
 
 
 def test_modis() -> None:
-    href = "data/MCD43A4.A2001055.h25v06.006.2016113010159_B01.TIF"
+    href = "tests/data/MCD43A4.A2001055.h25v06.006.2016113010159_B01.TIF"
     footprint = RasterFootprint.from_href(href, densification_factor=10).footprint()
 
     geometry = {
@@ -94,7 +95,7 @@ def test_modis() -> None:
 
 
 def test_sentinel2_sliver() -> None:
-    href = "data/S2A_OPER_MSI_L2A_TL_ATOS_20220620T162319_A036527_T32TLS_N04.00_R60m_B01.jp2"
+    href = "tests/data/S2A_OPER_MSI_L2A_TL_ATOS_20220620T162319_A036527_T32TLS_N04.00_R60m_B01.jp2"  # noqa
     footprint = RasterFootprint.from_href(
         href, simplify_tolerance=0.005, no_data=0
     ).footprint()
@@ -118,7 +119,7 @@ def test_sentinel2_sliver() -> None:
 
 
 def test_sentinel2_full() -> None:
-    href = "data/S2B_OPER_MSI_L2A_TL_2BPS_20220618T135630_A027590_T32TLS_N04.00_R60m_B01.jp2"
+    href = "tests/data/S2B_OPER_MSI_L2A_TL_2BPS_20220618T135630_A027590_T32TLS_N04.00_R60m_B01.jp2"  # noqa
     footprint = RasterFootprint.from_href(href).footprint()
 
     geometry = {
@@ -138,7 +139,7 @@ def test_sentinel2_full() -> None:
 
 
 def test_landsat8() -> None:
-    href = "data/LC08_L1TP_198029_20220331_20220406_02_T1_B2.TIF"
+    href = "tests/data/LC08_L1TP_198029_20220331_20220406_02_T1_B2.TIF"
     footprint = RasterFootprint.from_href(href, simplify_tolerance=0.005).footprint()
 
     geometry = {
@@ -159,7 +160,7 @@ def test_landsat8() -> None:
 
 
 def test_nan_as_nodata() -> None:
-    href = "data/LC08_LST_crop.tif"
+    href = "tests/data/LC08_LST_crop.tif"
     footprint = RasterFootprint.from_href(href, simplify_tolerance=0.01).footprint()
 
     geometry = {
@@ -179,7 +180,7 @@ def test_nan_as_nodata() -> None:
 
 
 def test_data_footprint_precision() -> None:
-    href = "data/S2A_OPER_MSI_L2A_TL_ATOS_20220620T162319_A036527_T32TLS_N04.00_R60m_B01.jp2"
+    href = "tests/data/S2A_OPER_MSI_L2A_TL_ATOS_20220620T162319_A036527_T32TLS_N04.00_R60m_B01.jp2"  # noqa
     footprint = RasterFootprint.from_href(
         href, precision=1, simplify_tolerance=0.01, no_data=0
     ).footprint()
@@ -304,7 +305,7 @@ def test_data_footprint_precision() -> None:
 
 
 def test_multiband_footprint() -> None:
-    href = "data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
     footprint = RasterFootprint.from_href(
         href, no_data=0, bands=[], simplify_tolerance=0.005
     ).footprint()

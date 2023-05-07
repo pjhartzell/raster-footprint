@@ -1,0 +1,21 @@
+[project]
+name = "raster-footprint"
+version = "0.1.0"
+dependencies = ["rasterio", "shapely"]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "codespell",
+    "mypy",
+    "pre-commit",
+    "pytest",
+    "ruff",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 88

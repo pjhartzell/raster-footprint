@@ -1,0 +1,22 @@
+# Configuration file for pre-commit (https://pre-commit.com/).
+# Please run `pre-commit run --all-files` when adding or changing entries.
+
+repos:
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.265
+    hooks:
+      - id: ruff
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.4
+    hooks:
+      - id: codespell
+        types_or: [markdown, python, shell]
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.2.0
+    hooks:
+      - id: mypy
+        files: ".*\\.py$"
