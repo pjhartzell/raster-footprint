@@ -359,6 +359,7 @@ class RasterFootprint:
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
         no_data: Optional[Union[int, float]] = None,
+        entire: bool = False,
         bands: List[int] = [1],
     ) -> T:
         """Produces a :class:`RasterFootprint` instance from an image href.
@@ -388,8 +389,13 @@ class RasterFootprint:
                 which all locations on the simplified polygon will be to the
                 original polygon.
             no_data (Optional[Union[int, float]]): Explicitly sets the nodata
-                value if not in source image metadata. If set to None, this will
-                return a footprint including nodata values.
+                value. If not provided, the nodata value in the source image
+                metadata is used. If not provided and a nodata value does not
+                exist in the source image metadata, a footprint for the entire
+                raster is returned.
+            entire (bool): If True, the ``no_data`` option is ignored and a
+                footprint for the entire raster, including nodata pixels, is
+                returned.
             bands (List[int]): The bands to use to compute the footprint.
                 Defaults to [1]. If an empty list is provided, the bands will be
                 ORd together; e.g., for a pixel to be outside of the footprint,
@@ -419,6 +425,7 @@ class RasterFootprint:
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
         no_data: Optional[Union[int, float]] = None,
+        entire: bool = False,
         bands: List[int] = [1],
     ) -> T:
         """Produces a :class:`RasterFootprint` instance from a
@@ -449,8 +456,13 @@ class RasterFootprint:
                 which all locations on the simplified polygon will be to the
                 original polygon.
             no_data (Optional[Union[int, float]]): Explicitly sets the nodata
-                value if not in source image metadata. If set to None, this will
-                return a footprint including nodata values.
+                value. If not provided, the nodata value in the source image
+                metadata is used. If not provided and a nodata value does not
+                exist in the source image metadata, a footprint for the entire
+                raster is returned.
+            entire (bool): If True, the ``no_data`` option is ignored and a
+                footprint for the entire raster, including nodata pixels, is
+                returned.
             bands (List[int]): The bands to use to compute the footprint.
                 Defaults to [1]. If an empty list is provided, the bands will be
                 ORd together; e.g., for a pixel to be outside of the footprint,
