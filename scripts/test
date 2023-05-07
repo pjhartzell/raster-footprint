@@ -21,6 +21,5 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         ./scripts/format
 
         pytest tests/
-        coverage xml
     fi
 fi
