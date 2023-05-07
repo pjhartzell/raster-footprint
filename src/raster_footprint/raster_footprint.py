@@ -480,7 +480,10 @@ class RasterFootprint:
 
         if not bands:
             bands = reader.indexes
-        if no_data is None:
+
+        if entire:
+            no_data = None
+        elif no_data is None:
             no_data = reader.nodata
 
         band_data = []
