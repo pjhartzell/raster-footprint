@@ -407,12 +407,13 @@ class RasterFootprint:
         with rasterio.open(href) as source:
             return cls.from_rasterio_dataset_reader(
                 reader=source,
-                no_data=no_data,
-                bands=bands,
                 precision=precision,
                 densification_factor=densification_factor,
                 densification_distance=densification_distance,
                 simplify_tolerance=simplify_tolerance,
+                no_data=no_data,
+                entire=entire,
+                bands=bands,
             )
 
     @classmethod
