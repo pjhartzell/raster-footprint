@@ -1,3 +1,7 @@
+import shutil
+from pathlib import Path
+
+import rasterio
 from shapely.geometry import shape
 from shapely.geometry.polygon import Polygon
 
@@ -304,8 +308,129 @@ def test_data_footprint_precision() -> None:
 #     )
 
 
-def test_multiband_footprint() -> None:
+def test_densify_by_distance() -> None:
+    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
+    assert len(coords) == 5
+    densified_coords = densify_by_distance(coords, 3.33)
+    for coord in coords:
+        assert coord in densified_coords
+    assert len(densified_coords) == 17
+
+
+def test_densify_by_factor() -> None:
+    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
+    assert len(coords) == 5
+    densified_coords = densify_by_factor(coords, 2)
+    for coord in coords:
+        assert coord in densified_coords
+    assert len(densified_coords) == 9
+
+
+def test_entire() -> None:
     href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    footprint = RasterFootprint.from_href(href, entire=True).footprint()
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.8852067, 40.4853073],
+                [-105.8840275, 40.3953528],
+                [-105.6366831, 40.3969793],
+                [-105.6375325, 40.486939],
+                [-105.8852067, 40.4853073],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    assert shape(geometry) == shape(footprint)
+
+
+def test_multiband_all_bands() -> None:
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    footprint = RasterFootprint.from_href(
+        href, no_data=0, bands=[], simplify_tolerance=0.005
+    ).footprint()
+    assert footprint
+
+    # import json
+
+    # with open("all-bands.json", "w") as f:
+    #     f.write(json.dumps(footprint, indent=4))
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.7853028, 40.4749528],
+                [-105.808413, 40.3959062],
+                [-105.6366831, 40.3969793],
+                [-105.6372387, 40.455872],
+                [-105.7853028, 40.4749528],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    expected = shape(geometry)
+    assert shape(footprint) == expected
+
+
+def test_multiband_single_band() -> None:
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    footprint = RasterFootprint.from_href(
+        href, no_data=0, bands=[2], simplify_tolerance=0.005
+    ).footprint()
+    assert footprint
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.7838846, 40.4746923],
+                [-105.8066463, 40.3959185],
+                [-105.6366831, 40.3969793],
+                [-105.6372362, 40.4556019],
+                [-105.7838846, 40.4746923],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    expected = shape(geometry)
+    assert shape(footprint) == expected
+
+
+def test_multiband_some_bands() -> None:
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    footprint = RasterFootprint.from_href(
+        href, no_data=0, bands=[1, 4, 5, 6], simplify_tolerance=0.005
+    ).footprint()
+    assert footprint
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.7824664, 40.4744317],
+                [-105.8052329, 40.3959284],
+                [-105.6366831, 40.3969793],
+                [-105.6372387, 40.455872],
+                [-105.7824664, 40.4744317],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    expected = shape(geometry)
+    assert shape(footprint) == expected
+
+
+def test_nonmatching_nodata_all_bands(tmp_path: Path) -> None:
+    href = str(tmp_path / "test.tif")
+    shutil.copy(
+        "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif", href
+    )
+    with rasterio.open(href, "r+") as src:
+        src.nodata = 1
+
     footprint = RasterFootprint.from_href(
         href, no_data=0, bands=[], simplify_tolerance=0.005
     ).footprint()
@@ -328,40 +453,83 @@ def test_multiband_footprint() -> None:
     assert shape(footprint) == expected
 
 
-def test_densify_by_distance() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_distance(coords, 3.33)
-    for coord in coords:
-        assert coord in densified_coords
-    assert len(densified_coords) == 17
+def test_nonmatching_nodata_some_bands(tmp_path: Path) -> None:
+    href = str(tmp_path / "test.tif")
+    shutil.copy(
+        "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif", href
+    )
+    with rasterio.open(href, "r+") as src:
+        src.nodata = 1
 
-
-def test_densify_by_factor() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_factor(coords, 2)
-    for coord in coords:
-        assert coord in densified_coords
-    assert len(densified_coords) == 9
-
-
-def test_entire() -> None:
-    href = "tests/data/LC08_LST_crop.tif"
     footprint = RasterFootprint.from_href(
-        href, densification_factor=10, simplify_tolerance=0.005, entire=True
+        href, no_data=0, bands=[1, 4, 5, 6], simplify_tolerance=0.005
     ).footprint()
-    print(footprint)
+    assert footprint
 
     geometry = {
         "type": "Polygon",
         "coordinates": [
             [
-                [-94.7219123, 42.4299713],
-                [-94.7199638, 42.3586741],
-                [-94.6281978, 42.3600143],
-                [-94.6300425, 42.4313148],
-                [-94.7219123, 42.4299713],
+                [-105.7824664, 40.4744317],
+                [-105.8052329, 40.3959284],
+                [-105.6366831, 40.3969793],
+                [-105.6372387, 40.455872],
+                [-105.7824664, 40.4744317],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    expected = shape(geometry)
+    assert shape(footprint) == expected
+
+
+def test_from_numpy_array() -> None:
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    with rasterio.open(href) as src:
+        numpy_array = src.read()
+        crs = src.crs
+        transform = src.transform
+        no_data = src.nodata
+    footprint = RasterFootprint.from_numpy_array(
+        numpy_array, crs, transform, no_data=no_data, simplify_tolerance=0.005
+    ).footprint()
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.7853028, 40.4749528],
+                [-105.808413, 40.3959062],
+                [-105.6366831, 40.3969793],
+                [-105.6372387, 40.455872],
+                [-105.7853028, 40.4749528],
+            ]
+        ],
+    }
+    assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
+    expected = shape(geometry)
+    assert shape(footprint) == expected
+
+
+def test_from_numpy_array_entire() -> None:
+    href = "tests/data/AST_L1T_00310012006175412_20150516104359-SWIR-cropped.tif"
+    with rasterio.open(href) as src:
+        numpy_array = src.read()
+        crs = src.crs
+        transform = src.transform
+    footprint = RasterFootprint.from_numpy_array(
+        numpy_array, crs, transform
+    ).footprint()
+
+    geometry = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-105.8852067, 40.4853073],
+                [-105.8840275, 40.3953528],
+                [-105.6366831, 40.3969793],
+                [-105.6375325, 40.486939],
+                [-105.8852067, 40.4853073],
             ]
         ],
     }

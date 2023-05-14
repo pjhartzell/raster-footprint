@@ -100,7 +100,8 @@ def reproject_polygon(
 
     Args:
         polygon (Polygon): The polygon to reproject.
-        crs (CRS): The CRS of the input polygon.
+        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+            coordinate reference system of the input polygon.
         precision (int): The number of decimal places to include in the final
             polygon vertex coordinates.
 
@@ -113,6 +114,40 @@ def reproject_polygon(
     # shapely.constructive.remove_repeated_points
     polygon = Polygon([k for k, _ in groupby(polygon.exterior.coords)])
     return polygon
+
+
+def create_data_mask(
+    data_array: npt.NDArray[Any], no_data: Optional[Union[int, float]] = None
+) -> npt.NDArray[np.uint8]:
+    """Produces a mask of valid data in the given ``data_array``.
+
+    Locations in the data array matching the given ``no_data`` value are set to
+    0, all other array locations are set to 255. If ``no_data`` is not provided,
+    all array locations are set to 255.
+
+    Args:
+        data_array (numpy.NDArray[Any]): A 2D or 3D array of raster data.
+        no_data (Optional[Union[int, float]]): The nodata value. If not
+            provided, all array locations are set to 255.
+
+    Returns:
+        numpy.NDArray[numpy.uint8]: A 2D array containing 0s and 255s for
+        nodata/data pixels.
+    """
+    if data_array.ndim == 2:
+        data_array = data_array[np.newaxis, :]
+    shape = data_array.shape
+    if no_data is not None:
+        mask: npt.NDArray[np.uint8] = np.full(shape, fill_value=0, dtype=np.uint8)
+        if np.isnan(no_data):
+            mask[~np.isnan(data_array)] = 1
+        else:
+            mask[np.where(data_array != no_data)] = 1
+        mask = np.sum(mask, axis=0, dtype=np.uint8)
+        mask[mask > 0] = 255
+    else:
+        mask = np.full(shape, fill_value=255, dtype=np.uint8)
+    return mask
 
 
 class RasterFootprint:
@@ -138,66 +173,61 @@ class RasterFootprint:
     a maximum distance to the original geometry.
 
     Args:
-        data_array (numpy.NDArray[Any]): The raster data used for the
-            footprint calculation.
-        crs (CRS): Coordinate reference system of the raster data.
-        transform (Affine): Matrix defining the transformation from pixel to CRS
-            coordinates.
-        precision (int): The number of decimal places to include in the
-            final footprint coordinates.
-        densification_factor (Optional[int]): The factor by which to
-            increase point density within the footprint polygon before
-            projection to EPSG 4326. A factor of 2 would double the density of
-            points (placing one new point between each existing pair of points),
-            a factor of 3 would place two points between each point, etc. Higher
-            densities produce higher fidelity footprints in areas of high
-            projection distortion. Mutually exclusive with
-            ``densification_distance``.
+        mask_array (numpy.NDArray[Any]): A mask of valid data pixels. More
+            specifically, a numpy array containing 0s at nodata pixel locations
+            and 255s at data pixel locations.
+        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+            coordinate reference system of the raster data.
+        transform (Affine): Affine class defining the transformation from pixel
+            to CRS coordinates.
+        precision (int): The number of decimal places to include in the final
+            footprint coordinates.
+        densification_factor (Optional[int]): The factor by which to increase
+            point density within the footprint polygon before projection to
+            EPSG 4326. A factor of 2 would double the density of points (placing
+            one new point between each existing pair of points), a factor of 3
+            would place two points between each point, etc. Higher densities
+            produce higher fidelity footprints in areas of high projection
+            distortion. Mutually exclusive with ``densification_distance``.
         densification_distance (Optional[float]): The distance by which to
             increase point density within the footprint polygon before
             projection to EPSG 4326. If the distance is set to 2 and the segment
             length between two polygon vertices is 10, 4 new vertices would be
-            created along the segment. Higher densities produce higher
-            fidelity footprints in areas of high projection distortion.
-            Mutually exclusive with ``densification_factor``.
+            created along the segment. Higher densities produce higher fidelity
+            footprints in areas of high projection distortion. Mutually
+            exclusive with ``densification_factor``.
         simplify_tolerance (Optional[float]): Distance, in degrees, within
             which all locations on the simplified polygon will be to the original
             polygon.
-        no_data (Optional[Union[int, float]]): The nodata value in
-            ``data_array``. If set to None, this will return a footprint
-            including nodata values.
     """
+
+    mask_array: npt.NDArray[Any]
+    """2D or 3D array of raster data."""
 
     crs: CRS
     """Coordinate reference system of the raster data."""
 
-    data_array: npt.NDArray[Any]
-    """2D or 3D array of raster data."""
+    transform: Affine
+    """Transformation matrix from pixel to CRS coordinates."""
 
-    densification_distance: Optional[float]
-    """Optional distance for densifying polygon vertices before reprojection to
-    EPSG 4326."""
+    precision: int
+    """Number of decimal places in the final footprint coordinates."""
 
     densification_factor: Optional[int]
     """Optional factor for densifying polygon vertices before reprojection to
     EPSG 4326."""
 
-    no_data: Optional[Union[int, float]]
-    """Optional value defining pixels to exclude from the footprint."""
-
-    precision: int
-    """Number of decimal places in the final footprint coordinates."""
+    densification_distance: Optional[float]
+    """Optional distance for densifying polygon vertices before reprojection to
+    EPSG 4326."""
 
     simplify_tolerance: Optional[float]
     """Optional maximum allowable error when simplifying the reprojected
     polygon."""
 
-    transform: Affine
-    """Transformation matrix from pixel to CRS coordinates."""
-
     def __init__(
         self,
-        data_array: npt.NDArray[Any],
+        mask_array: npt.NDArray[np.uint8],
         crs: CRS,
         transform: Affine,
         *,
@@ -205,11 +235,8 @@ class RasterFootprint:
         densification_factor: Optional[int] = None,
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
-        no_data: Optional[Union[int, float]] = None,
     ) -> None:
-        if data_array.ndim == 2:
-            data_array = data_array[np.newaxis, :]
-        self.data_array = data_array
+        self.mask_array = mask_array
         self.crs = crs
         self.transform = transform
         self.precision = precision
@@ -221,7 +248,6 @@ class RasterFootprint:
         self.densification_factor = densification_factor
         self.densification_distance = densification_distance
         self.simplify_tolerance = simplify_tolerance
-        self.no_data = no_data
 
     def footprint(self) -> Optional[Dict[str, Any]]:
         """Produces the footprint surrounding data (not nodata) pixels in the
@@ -232,8 +258,7 @@ class RasterFootprint:
             Optional[Dict[str, Any]]: A GeoJSON dictionary containing the
             footprint polygon.
         """
-        mask = self.data_mask()
-        polygon = self.data_extent(mask)
+        polygon = self.data_extent()
         if polygon is None:
             return None
         polygon = self.densify_polygon(polygon)
@@ -241,34 +266,12 @@ class RasterFootprint:
         polygon = self.simplify_polygon(polygon)
         return mapping(polygon)  # type: ignore
 
-    def data_mask(self) -> npt.NDArray[np.uint8]:
-        """Produces a mask of valid data in the source image. Nodata pixels
-        values are set to 0, data pixels are set to 1.
-
-        Returns:
-            numpy.NDArray[numpy.uint8]: A 2D array containing 0s and 1s for
-            nodata/data pixels.
-        """
-        assert self.data_array.ndim == 3
-        shape = self.data_array.shape
-        if self.no_data is not None:
-            mask: npt.NDArray[np.uint8] = np.full(shape, 0, dtype=np.uint8)
-            if np.isnan(self.no_data):
-                mask[~np.isnan(self.data_array)] = 1
-            else:
-                mask[np.where(self.data_array != self.no_data)] = 1
-            mask = np.sum(mask, axis=0, dtype=np.uint8)
-            mask[mask > 0] = 1
-        else:
-            mask = np.full(shape, 1, dtype=np.uint8)
-        return mask
-
-    def data_extent(self, mask: npt.NDArray[np.uint8]) -> Optional[Polygon]:
+    def data_extent(self) -> Optional[Polygon]:
         """Produces the data footprint in the native CRS.
 
         Args:
-            mask (numpy.NDArray[numpy.uint8]): A 2D array containing 0s and 1s for
-                nodata/data pixels.
+            mask (numpy.NDArray[numpy.uint8]): A 2D array containing 0s and 255s
+                for nodata/data pixels.
 
         Returns:
             Optional[Polygon]: A native CRS polygon of the convex hull of data
@@ -277,9 +280,9 @@ class RasterFootprint:
         data_polygons = [
             shape(polygon_dict)
             for polygon_dict, region_value in rasterio.features.shapes(
-                mask, transform=self.transform
+                self.mask_array, transform=self.transform
             )
-            if region_value == 1
+            if region_value == 255
         ]
 
         if not data_polygons:
@@ -430,7 +433,7 @@ class RasterFootprint:
         bands: List[int] = [1],
     ) -> T:
         """Produces a :class:`RasterFootprint` instance from a
-        :class:`rasterio.io.DatasetReader`  object, i.e., an opened dataset
+        :class:`rasterio.io.DatasetReader` object, i.e., an opened dataset
         object returned by a :func:`rasterio.open` call.
 
         Args:
@@ -476,26 +479,91 @@ class RasterFootprint:
             raise ValueError(
                 "Raster footprint cannot be computed for an asset with no bands."
             )
-        if len(set(reader.nodatavals)) != 1:
-            raise ValueError("All raster bands must have the same 'nodata' value.")
-
-        if not bands:
-            bands = reader.indexes
+        if no_data is not None and len(set(reader.nodatavals)) != 1:
+            raise ValueError(
+                "When specifying a 'no_data' value, all raster bands must have "
+                "the same 'nodata' value."
+            )
 
         if entire:
-            no_data = None
-        elif no_data is None:
-            no_data = reader.nodata
-
-        band_data = []
-        for index in bands:
-            band_data.append(reader.read(index))
+            mask = np.full(reader.shape, fill_value=255, dtype=np.uint8)
+            # does reader.shape return a three dimensional array for a multiband image?
+        elif no_data is None or no_data == reader.nodata:
+            if not bands:
+                mask = reader.dataset_mask()
+            elif len(bands) == 1:
+                mask = reader.read_masks(bands)
+            else:
+                mask = reader.read_masks(bands)
+                mask = np.sum(mask, axis=0, dtype=np.uint8)
+                mask[mask > 0] = 255
+        else:
+            if not bands:
+                bands = reader.indexes
+            mask = create_data_mask(reader.read(bands), no_data=no_data)
 
         return cls(
-            data_array=np.asarray(band_data),
+            mask_array=mask,
             crs=reader.crs,
             transform=reader.transform,
-            no_data=no_data,
+            precision=precision,
+            densification_factor=densification_factor,
+            densification_distance=densification_distance,
+            simplify_tolerance=simplify_tolerance,
+        )
+
+    @classmethod
+    def from_numpy_array(
+        cls: Type[T],
+        numpy_array: npt.NDArray[Any],
+        crs: CRS,
+        transform: Affine,
+        *,
+        no_data: Optional[Union[int, float]] = None,
+        precision: int = DEFAULT_PRECISION,
+        densification_factor: Optional[int] = None,
+        densification_distance: Optional[float] = None,
+        simplify_tolerance: Optional[float] = None,
+    ) -> T:
+        """Produces a :class:`RasterFootprint` instance from a numpy array of
+        image data.
+
+        Args:
+            numpy_array (npt.NDArray[Any]): A numpy array of image data.
+            crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+                coordinate reference system of the data contained in the given
+                ``numpy_array`.
+            transform (Affine): Affine class defining the transformation from
+                pixel to CRS coordinates.
+            no_data (Optional[Union[int, float]]): The nodata value to use for
+                creating the nodata/data mask. If not provided, a footprint for
+                the entire raster is returned.
+            precision (int): The number of decimal places to include in the
+                final footprint coordinates.
+            densification_factor (Optional[int]): The factor by which to
+                increase point density within the footprint polygon before
+                projection to EPSG 4326. A factor of 2 would double the density
+                of points (placing one new point between each existing pair of
+                points), a factor of 3 would place two points between each point,
+                etc. Higher densities produce higher fidelity footprints in
+                areas of high projection distortion. Mutually exclusive with
+                ``densification_distance``.
+            densification_distance (Optional[float]): The distance by which to
+                increase point density within the footprint polygon before
+                projection to EPSG 4326. If the distance is set to 2 and the
+                segment length between two polygon vertices is 10, 4 new
+                vertices would be created along the segment. Higher densities
+                produce higher fidelity footprints in areas of high projection
+                distortion.  Mutually exclusive with ``densification_factor``.
+            simplify_tolerance (Optional[float]): Distance, in degrees, within
+                which all locations on the simplified polygon will be to the
+                original polygon.
+        """
+        mask = create_data_mask(numpy_array, no_data=no_data)
+        return cls(
+            mask_array=mask,
+            crs=crs,
+            transform=transform,
             precision=precision,
             densification_factor=densification_factor,
             densification_distance=densification_distance,
