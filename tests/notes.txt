@@ -1,0 +1,32 @@
+test_concave_convex_holes
+- single concave shell
+- single convex_hull shell
+- double concave shell
+- double convex_hull shell
+- single shell with hole
+- single shell with hole filled
+- double holes with one containing a shell
+
+test_densify_reproject_simplify
+- reprojection
+- duplicate point removal
+- simplification
+- densify_by_distance
+- densify_by_factor
+- with nodata
+
+test_multiband
+- multiband all bands
+- multiband some bands
+- multiband single band
+
+test_mask_creation
+- partial
+- with_nodata
+
+test_alternative_constructors
+- from_href
+- from_rasterio_dataset_reader
+- from_numpy_array
+
+antimeridian?

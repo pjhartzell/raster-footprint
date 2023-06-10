@@ -11,6 +11,7 @@ import rasterio.features
 from rasterio import Affine, DatasetReader
 from rasterio.crs import CRS
 from rasterio.warp import transform_geom
+from shapely import unary_union
 from shapely.geometry import mapping, shape
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon, orient
@@ -42,7 +43,7 @@ def densify_by_factor(
 
     Returns:
         List[Tuple[float, float]]: A list of the densified points.
-    """  # noqa: E501
+    """
     points: Any = np.asarray(point_list)
     densified_number = len(points) * factor
     existing_indices = np.arange(0, densified_number, factor)
@@ -110,10 +111,11 @@ def reproject_polygon(
     """
     polygon = shape(transform_geom(crs, "EPSG:4326", polygon, precision=precision))
     # Rounding to precision can produce duplicate coordinates, so we remove
-    # them. Once once shapely>=2.0.0 is required, this can be replaced with
+    # them. Once shapely>=2.0.0 is required, this can be replaced with
     # shapely.constructive.remove_repeated_points
-    polygon = Polygon([k for k, _ in groupby(polygon.exterior.coords)])
-    return polygon
+    shell = [k for k, _ in groupby(polygon.exterior.coords)]
+    holes = [[k for k, _ in groupby(interior.coords)] for interior in polygon.interiors]
+    return Polygon(shell=shell, holes=holes)
 
 
 def create_data_mask(
@@ -199,6 +201,10 @@ class RasterFootprint:
         simplify_tolerance (Optional[float]): Distance, in degrees, within
             which all locations on the simplified polygon will be to the original
             polygon.
+        holes (bool): Whether to include holes in the extracted polygons. Has no
+            effect if ``convex_hull`` is True.
+        convex_hull (bool): Whether to calculate the convex hull of the extracted
+            polygons.
     """
 
     mask_array: npt.NDArray[Any]
@@ -225,6 +231,12 @@ class RasterFootprint:
     """Optional maximum allowable error when simplifying the reprojected
     polygon."""
 
+    holes: bool
+    """Whether to include holes in the extracted polygons."""
+
+    convex_hull: bool
+    """Whether to calculate the convex hull of the extracted polygons."""
+
     def __init__(
         self,
         mask_array: npt.NDArray[np.uint8],
@@ -235,6 +247,8 @@ class RasterFootprint:
         densification_factor: Optional[int] = None,
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
+        convex_hull: bool = False,
+        holes: bool = True,
     ) -> None:
         self.mask_array = mask_array
         self.crs = crs
@@ -248,6 +262,8 @@ class RasterFootprint:
         self.densification_factor = densification_factor
         self.densification_distance = densification_distance
         self.simplify_tolerance = simplify_tolerance
+        self.convex_hull = convex_hull
+        self.holes = holes
 
     def footprint(self) -> Optional[Dict[str, Any]]:
         """Produces the footprint surrounding data (not nodata) pixels in the
@@ -256,17 +272,19 @@ class RasterFootprint:
 
         Returns:
             Optional[Dict[str, Any]]: A GeoJSON dictionary containing the
-            footprint polygon.
+            footprint polygon, or None if a footprint is unable to be computed.
         """
-        polygon = self.data_extent()
+        polygon = self.get_data_extent()
         if polygon is None:
             return None
-        polygon = self.densify_polygon(polygon)
-        polygon = self.reproject_polygon(polygon)
-        polygon = self.simplify_polygon(polygon)
+        if isinstance(polygon, Polygon):
+            polygon = self.densify_reproject_simplify(polygon)
+        else:
+            polygons = [self.densify_reproject_simplify(poly) for poly in polygon.geoms]
+            polygon = MultiPolygon(polygons)
         return mapping(polygon)  # type: ignore
 
-    def data_extent(self) -> Optional[Polygon]:
+    def get_data_extent(self) -> Optional[Union[Polygon, MultiPolygon]]:
         """Produces the data footprint in the native CRS.
 
         Args:
@@ -274,8 +292,8 @@ class RasterFootprint:
                 for nodata/data pixels.
 
         Returns:
-            Optional[Polygon]: A native CRS polygon of the convex hull of data
-            pixels.
+            Optional[Union[Polygon, MultiPolygon]: A native CRS polygon or
+            MultiPolygon of data pixels.
         """
         data_polygons = [
             shape(polygon_dict)
@@ -287,12 +305,26 @@ class RasterFootprint:
 
         if not data_polygons:
             return None
-        elif len(data_polygons) == 1:
-            polygon = data_polygons[0]
-        else:
-            polygon = MultiPolygon(data_polygons).convex_hull
 
-        return orient(polygon)
+        if not self.holes and not self.convex_hull:
+            data_polygons = [Polygon(poly.exterior.coords) for poly in data_polygons]
+            unioned_polygons = unary_union(data_polygons)
+            if isinstance(unioned_polygons, Polygon):
+                data_polygons = [unioned_polygons]
+            else:
+                data_polygons = list(unioned_polygons.geoms)
+
+        data_polygons = [orient(poly) for poly in data_polygons]
+
+        if len(data_polygons) == 1:
+            data_extent = data_polygons[0]
+        else:
+            data_extent = MultiPolygon(data_polygons)
+
+        if self.convex_hull:
+            data_extent = orient(data_extent.convex_hull)
+
+        return data_extent
 
     def densify_polygon(self, polygon: Polygon) -> Polygon:
         """Adds vertices to the footprint polygon in the native CRS using
@@ -307,15 +339,23 @@ class RasterFootprint:
         """
         assert not (self.densification_factor and self.densification_distance)
         if self.densification_factor is not None:
-            return Polygon(
-                densify_by_factor(polygon.exterior.coords, self.densification_factor)
+            shell = densify_by_factor(
+                polygon.exterior.coords, self.densification_factor
             )
+            holes = [
+                densify_by_factor(interior.coords, self.densification_factor)
+                for interior in polygon.interiors
+            ]
+            return Polygon(shell=shell, holes=holes)
         elif self.densification_distance is not None:
-            return Polygon(
-                densify_by_distance(
-                    polygon.exterior.coords, self.densification_distance
-                )
+            shell = densify_by_distance(
+                polygon.exterior.coords, self.densification_distance
             )
+            holes = [
+                densify_by_distance(interior.coords, self.densification_distance)
+                for interior in polygon.interiors
+            ]
+            return Polygon(shell=shell, holes=holes)
         else:
             return polygon
 
@@ -345,11 +385,22 @@ class RasterFootprint:
             Polygon: Reduced vertex polygon.
         """
         if self.simplify_tolerance is not None:
-            return orient(
-                polygon.simplify(
-                    tolerance=self.simplify_tolerance, preserve_topology=False
-                )
-            )
+            return orient(polygon.simplify(tolerance=self.simplify_tolerance))
+        return polygon
+
+    def densify_reproject_simplify(self, polygon: Polygon) -> Polygon:
+        """Densifies, reprojects, and simplifies a polygon.
+
+        Args:
+            polygon (Polygon): Polygon to be densified, reprojected, and
+                simplified.
+
+        Returns:
+            Polygon: Densified, reprojected, and simplified polygon.
+        """
+        polygon = self.densify_polygon(polygon)
+        polygon = self.reproject_polygon(polygon)
+        polygon = self.simplify_polygon(polygon)
         return polygon
 
     @classmethod
@@ -361,6 +412,8 @@ class RasterFootprint:
         densification_factor: Optional[int] = None,
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
+        holes: bool = True,
+        convex_hull: bool = False,
         no_data: Optional[Union[int, float]] = None,
         entire: bool = False,
         bands: List[int] = [1],
@@ -391,6 +444,10 @@ class RasterFootprint:
             simplify_tolerance (Optional[float]): Distance, in degrees, within
                 which all locations on the simplified polygon will be to the
                 original polygon.
+            holes (bool): Whether to include holes in the extracted polygons.
+                Has no effect if ``convex_hull`` is True.
+            convex_hull (bool): Whether to calculate the convex hull of the
+                extracted polygons.
             no_data (Optional[Union[int, float]]): Explicitly sets the nodata
                 value. If not provided, the nodata value in the source image
                 metadata is used. If not provided and a nodata value does not
@@ -414,6 +471,8 @@ class RasterFootprint:
                 densification_factor=densification_factor,
                 densification_distance=densification_distance,
                 simplify_tolerance=simplify_tolerance,
+                holes=holes,
+                convex_hull=convex_hull,
                 no_data=no_data,
                 entire=entire,
                 bands=bands,
@@ -428,6 +487,8 @@ class RasterFootprint:
         densification_factor: Optional[int] = None,
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
+        holes: bool = True,
+        convex_hull: bool = False,
         no_data: Optional[Union[int, float]] = None,
         entire: bool = False,
         bands: List[int] = [1],
@@ -459,6 +520,10 @@ class RasterFootprint:
             simplify_tolerance (Optional[float]): Distance, in degrees, within
                 which all locations on the simplified polygon will be to the
                 original polygon.
+            holes (bool): Whether to include holes in the extracted polygons.
+                Has no effect if ``convex_hull`` is True.
+            convex_hull (bool): Whether to calculate the convex hull of the
+                extracted polygons.
             no_data (Optional[Union[int, float]]): Explicitly sets the nodata
                 value. If not provided, the nodata value in the source image
                 metadata is used. If not provided and a nodata value does not
@@ -510,6 +575,8 @@ class RasterFootprint:
             densification_factor=densification_factor,
             densification_distance=densification_distance,
             simplify_tolerance=simplify_tolerance,
+            holes=holes,
+            convex_hull=convex_hull,
         )
 
     @classmethod
@@ -524,6 +591,8 @@ class RasterFootprint:
         densification_factor: Optional[int] = None,
         densification_distance: Optional[float] = None,
         simplify_tolerance: Optional[float] = None,
+        holes: bool = True,
+        convex_hull: bool = False,
     ) -> T:
         """Produces a :class:`RasterFootprint` instance from a numpy array of
         image data.
@@ -558,6 +627,10 @@ class RasterFootprint:
             simplify_tolerance (Optional[float]): Distance, in degrees, within
                 which all locations on the simplified polygon will be to the
                 original polygon.
+            holes (bool): Whether to include holes in the extracted polygons.
+                Has no effect if ``convex_hull`` is True.
+            convex_hull (bool): Whether to calculate the convex hull of the
+                extracted polygons.
         """
         mask = create_data_mask(numpy_array, no_data=no_data)
         return cls(
@@ -568,4 +641,6 @@ class RasterFootprint:
             densification_factor=densification_factor,
             densification_distance=densification_distance,
             simplify_tolerance=simplify_tolerance,
+            holes=holes,
+            convex_hull=convex_hull,
         )

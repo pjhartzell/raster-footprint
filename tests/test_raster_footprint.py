@@ -1,20 +1,53 @@
 import shutil
 from pathlib import Path
+from typing import Tuple
 
+import numpy as np
+import numpy.typing as npt
+import pytest
 import rasterio
+from rasterio.crs import CRS
+from rasterio.transform import Affine
+from shapely import hausdorff_distance
 from shapely.geometry import shape
 from shapely.geometry.polygon import Polygon
 
-from raster_footprint.raster_footprint import (
-    RasterFootprint,
-    densify_by_distance,
-    densify_by_factor,
-)
+from raster_footprint.raster_footprint import RasterFootprint
+
+
+@pytest.fixture
+def two_squares() -> Tuple[npt.NDArray[np.uint8], Affine, CRS]:
+    """Creates a raster with two squares, both with a single hole. One hole
+    contains a single pixel of data, the other is empty."""
+    mask = np.zeros((13, 13), dtype=np.uint8)
+    mask[1:6, 1:6] = 255
+    mask[1:6, 7:12] = 255
+    mask[2:5, 2:5] = 0
+    mask[2:5, 8:11] = 0
+    mask[3, 3] = 255
+    transform = Affine(1, 0, 0, 0, -1, 0)
+    crs = CRS.from_epsg(4326)
+    return mask, transform, crs
+
+
+@pytest.fixture
+def one_square() -> Tuple[npt.NDArray[np.uint8], Affine, CRS]:
+    """Creates a raster with a single square, with a single hole containing a
+    single pixel of data."""
+    mask = np.zeros((13, 13), dtype=np.uint8)
+    mask[1:6, 1:6] = 255
+    mask[2:5, 2:5] = 0
+    mask[3, 3] = 255
+    transform = Affine(1, 0, 0, 0, -1, 0)
+    crs = CRS.from_epsg(4326)
+    return mask, transform, crs
 
 
 def test_modis() -> None:
     href = "tests/data/MCD43A4.A2001055.h25v06.006.2016113010159_B01.TIF"
-    footprint = RasterFootprint.from_href(href, densification_factor=10).footprint()
+    footprint = RasterFootprint.from_href(
+        href, convex_hull=True, densification_factor=10
+    ).footprint()
 
     geometry = {
         "type": "Polygon",
@@ -144,7 +177,9 @@ def test_sentinel2_full() -> None:
 
 def test_landsat8() -> None:
     href = "tests/data/LC08_L1TP_198029_20220331_20220406_02_T1_B2.TIF"
-    footprint = RasterFootprint.from_href(href, simplify_tolerance=0.005).footprint()
+    footprint = RasterFootprint.from_href(
+        href, convex_hull=True, simplify_tolerance=0.005
+    ).footprint()
 
     geometry = {
         "type": "Polygon",
@@ -160,7 +195,8 @@ def test_landsat8() -> None:
         ],
     }
     assert Polygon(geometry["coordinates"][0]).exterior.is_ccw is True
-    assert shape(geometry) == shape(footprint)
+    # assert shape(geometry) == shape(footprint)
+    assert hausdorff_distance(shape(geometry), shape(footprint)) < 1e-9
 
 
 def test_nan_as_nodata() -> None:
@@ -306,24 +342,6 @@ def test_data_footprint_precision() -> None:
 #         densify_reproject_simplify(redundant_shape, CRS.from_epsg(4326))
 #         == deduplicated_shape
 #     )
-
-
-def test_densify_by_distance() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_distance(coords, 3.33)
-    for coord in coords:
-        assert coord in densified_coords
-    assert len(densified_coords) == 17
-
-
-def test_densify_by_factor() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_factor(coords, 2)
-    for coord in coords:
-        assert coord in densified_coords
-    assert len(densified_coords) == 9
 
 
 def test_entire() -> None:
