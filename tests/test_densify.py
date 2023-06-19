@@ -1,25 +1,23 @@
 import pytest
-from shapely.geometry import shape
+from shapely.geometry import Point, shape
 
 from raster_footprint import densify_by_distance, densify_by_factor, densify_extent
 
-from .conftest import read_geojson
+from .conftest import check_winding, read_geojson
+
+SQUARE = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
 
 
 def test_densify_by_distance() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_distance(coords, 3.33)
-    for coord in coords:
+    densified_coords = densify_by_distance(SQUARE, 3.33)
+    for coord in SQUARE:
         assert coord in densified_coords
     assert len(densified_coords) == 17
 
 
 def test_densify_by_factor() -> None:
-    coords = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]
-    assert len(coords) == 5
-    densified_coords = densify_by_factor(coords, 2)
-    for coord in coords:
+    densified_coords = densify_by_factor(SQUARE, 2)
+    for coord in SQUARE:
         assert coord in densified_coords
     assert len(densified_coords) == 9
 
@@ -30,11 +28,11 @@ def test_densify_polygon() -> None:
 
     densified_by_factor = densify_extent(polygon, factor=2)
     assert len(densified_by_factor.exterior.coords) == 25
-    assert densified_by_factor.exterior.is_ccw
+    check_winding(densified_by_factor)
 
     densified_by_distance = densify_extent(polygon, distance=1)
     assert len(densified_by_distance.exterior.coords) == 29
-    assert densified_by_distance.exterior.is_ccw
+    check_winding(densified_by_distance)
 
 
 def test_densify_polygon_with_holes() -> None:
@@ -46,19 +44,17 @@ def test_densify_polygon_with_holes() -> None:
 
     densified_by_factor = densify_extent(polygon, factor=2)
     assert len(densified_by_factor.exterior.coords) == 25
-    assert densified_by_factor.exterior.is_ccw
     assert len(densified_by_factor.interiors) == 2
     for interior in densified_by_factor.interiors:
         assert len(interior.coords) == 9
-        assert not interior.is_ccw
+    check_winding(densified_by_factor)
 
     densified_by_distance = densify_extent(polygon, distance=1)
     assert len(densified_by_distance.exterior.coords) == 29
-    assert densified_by_distance.exterior.is_ccw
     assert len(densified_by_distance.interiors) == 2
     for interior in densified_by_distance.interiors:
         assert len(interior.coords) == 7
-        assert not interior.is_ccw
+    check_winding(densified_by_distance)
 
 
 def test_densify_multi_polygon_with_holes() -> None:
@@ -72,20 +68,18 @@ def test_densify_multi_polygon_with_holes() -> None:
     densified_by_factor = densify_extent(multi_polygon, factor=2)
     for polygon in densified_by_factor.geoms:
         assert len(polygon.exterior.coords) == 25
-        assert polygon.exterior.is_ccw
         assert len(polygon.interiors) == 2
         for interior in polygon.interiors:
             assert len(interior.coords) == 9
-            assert not interior.is_ccw
+    check_winding(densified_by_factor)
 
     densified_by_distance = densify_extent(multi_polygon, distance=1)
     for polygon in densified_by_distance.geoms:
         assert len(polygon.exterior.coords) == 29
-        assert polygon.exterior.is_ccw
         assert len(polygon.interiors) == 2
         for interior in polygon.interiors:
             assert len(interior.coords) == 7
-            assert not interior.is_ccw
+    check_winding(densified_by_distance)
 
 
 def test_double_option_fails() -> None:
@@ -93,3 +87,8 @@ def test_double_option_fails() -> None:
         ValueError, match="Only one of 'factor' or 'distance' can be specified."
     ):
         densify_extent(shape(read_geojson("concave-shell.json")), factor=2, distance=1)
+
+
+def test_not_polygon_or_multi_polygon_fails() -> None:
+    with pytest.raises(TypeError):
+        densify_extent(Point(0, 0))

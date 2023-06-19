@@ -19,7 +19,6 @@ def simplify_polygon(polygon: Polygon, *, tolerance: Optional[float] = None) -> 
         Polygon: The simplified polygon.
     """
     if tolerance is not None:
-        # return orient(polygon.simplify(tolerance=tolerance, preserve_topology=False))
         return polygon.simplify(tolerance=tolerance, preserve_topology=False)
     return polygon
 

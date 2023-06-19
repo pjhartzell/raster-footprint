@@ -43,7 +43,7 @@ def footprint_from_mask(
 
 
 def footprint_from_data(
-    numpy_array: npt.NDArray[Any],
+    data: npt.NDArray[Any],
     crs: CRS,
     transform: Affine,
     *,
@@ -57,7 +57,7 @@ def footprint_from_data(
     image data.
 
     Args:
-        numpy_array (npt.NDArray[Any]): A numpy array of image data.
+        data (npt.NDArray[Any]): A numpy array of image data.
         crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the data contained in the given
             ``numpy_array`.
@@ -87,7 +87,7 @@ def footprint_from_data(
             which all locations on the simplified polygon will be to the
             original polygon.
     """
-    mask = create_mask(numpy_array, no_data=no_data)
+    mask = create_mask(data, no_data=no_data)
     return footprint_from_mask(
         mask,
         crs,

@@ -36,11 +36,11 @@ def create_mask(
         if np.isnan(no_data):
             mask[~np.isnan(data_array)] = 1
         else:
-            mask[np.where(data_array != no_data)] = 1
+            mask[data_array != no_data] = 1
         mask = np.sum(mask, axis=0, dtype=np.uint8)
         mask[mask > 0] = 255
     else:
-        mask = np.full(shape, fill_value=255, dtype=np.uint8)
+        mask = np.full(shape[-2:], fill_value=255, dtype=np.uint8)
     return mask
 
 
