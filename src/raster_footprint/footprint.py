@@ -47,14 +47,16 @@ def footprint_from_data(
     crs: CRS,
     transform: Affine,
     *,
-    no_data: Optional[Union[int, float]] = None,
+    nodata: Optional[Union[int, float]] = None,
     precision: int = DEFAULT_PRECISION,
     densify_factor: Optional[int] = None,
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
+    convex_hull: bool = False,
+    holes: bool = True,
 ) -> Optional[Dict[str, Any]]:
-    """Produces a :class:`RasterFootprint` instance from a numpy array of
-    image data.
+    """Convenience function for creating a footprint from a numpy array of
+    data
 
     Args:
         data (npt.NDArray[Any]): A numpy array of image data.
@@ -63,7 +65,7 @@ def footprint_from_data(
             ``numpy_array`.
         transform (Affine): Affine class defining the transformation from
             pixel to CRS coordinates.
-        no_data (Optional[Union[int, float]]): The nodata value to use for
+        nodata (Optional[Union[int, float]]): The nodata value to use for
             creating the nodata/data mask. If not provided, a footprint for
             the entire raster is returned.
         precision (int): The number of decimal places to include in the
@@ -87,7 +89,7 @@ def footprint_from_data(
             which all locations on the simplified polygon will be to the
             original polygon.
     """
-    mask = create_mask(data, no_data=no_data)
+    mask = create_mask(data, nodata=nodata)
     return footprint_from_mask(
         mask,
         crs,
@@ -96,6 +98,8 @@ def footprint_from_data(
         densify_factor=densify_factor,
         densify_distance=densify_distance,
         simplify_tolerance=simplify_tolerance,
+        convex_hull=convex_hull,
+        holes=holes,
     )
 
 
@@ -106,9 +110,11 @@ def footprint_from_href(
     densify_factor: Optional[int] = None,
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
-    no_data: Optional[Union[int, float]] = None,
-    entire: bool = False,
-    bands: List[int] = [1],
+    nodata: Optional[Union[int, float]] = None,
+    with_nodata: bool = False,
+    bands: Optional[List[int]] = None,
+    convex_hull: bool = False,
+    holes: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """Produces a :class:`RasterFootprint` instance from an image href.
 
@@ -136,12 +142,12 @@ def footprint_from_href(
         simplify_tolerance (Optional[float]): Distance, in degrees, within
             which all locations on the simplified polygon will be to the
             original polygon.
-        no_data (Optional[Union[int, float]]): Explicitly sets the nodata
+        nodata (Optional[Union[int, float]]): Explicitly sets the nodata
             value. If not provided, the nodata value in the source image
             metadata is used. If not provided and a nodata value does not
             exist in the source image metadata, a footprint for the entire
             raster is returned.
-        entire (bool): If True, the ``no_data`` option is ignored and a
+        with_nodata (bool): If True, the ``nodata`` option is ignored and a
             footprint for the entire raster, including nodata pixels, is
             returned.
         bands (List[int]): The bands to use to compute the footprint.
@@ -159,9 +165,11 @@ def footprint_from_href(
             densify_factor=densify_factor,
             densify_distance=densify_distance,
             simplify_tolerance=simplify_tolerance,
-            no_data=no_data,
-            entire=entire,
+            nodata=nodata,
+            with_nodata=with_nodata,
             bands=bands,
+            convex_hull=convex_hull,
+            holes=holes,
         )
 
 
@@ -172,9 +180,11 @@ def footprint_from_rasterio_reader(
     densify_factor: Optional[int] = None,
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
-    no_data: Optional[Union[int, float]] = None,
-    entire: bool = False,
-    bands: List[int] = [1],
+    nodata: Optional[Union[int, float]] = None,
+    with_nodata: bool = False,
+    bands: Optional[List[int]] = None,
+    convex_hull: bool = False,
+    holes: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """Produces a :class:`RasterFootprint` instance from a
     :class:`rasterio.io.DatasetReader` object, i.e., an opened dataset
@@ -203,12 +213,12 @@ def footprint_from_rasterio_reader(
         simplify_tolerance (Optional[float]): Distance, in degrees, within
             which all locations on the simplified polygon will be to the
             original polygon.
-        no_data (Optional[Union[int, float]]): Explicitly sets the nodata
+        nodata (Optional[Union[int, float]]): Explicitly sets the nodata
             value. If not provided, the nodata value in the source image
             metadata is used. If not provided and a nodata value does not
             exist in the source image metadata, a footprint for the entire
             raster is returned.
-        entire (bool): If True, the ``no_data`` option is ignored and a
+        with_nodata (bool): If True, the ``nodata`` option is ignored and a
             footprint for the entire raster, including nodata pixels, is
             returned.
         bands (List[int]): The bands to use to compute the footprint.
@@ -223,16 +233,15 @@ def footprint_from_rasterio_reader(
         raise ValueError(
             "Raster footprint cannot be computed for an asset with no bands."
         )
-    if no_data is not None and len(set(reader.nodatavals)) != 1:
+    if nodata is not None and len(set(reader.nodatavals)) != 1:
         raise ValueError(
-            "When specifying a 'no_data' value, all raster bands must have "
+            "When specifying a 'nodata' value, all raster bands must have "
             "the same 'nodata' value."
         )
 
-    if entire:
-        mask = np.full(reader.shape, fill_value=255, dtype=np.uint8)
-        # does reader.shape return a three dimensional array for a multiband image?
-    elif no_data is None or no_data == reader.nodata:
+    if with_nodata:
+        mask = np.full(reader.shape[-2:], fill_value=255, dtype=np.uint8)
+    elif nodata is None or nodata == reader.nodata:
         if not bands:
             mask = reader.dataset_mask()
         elif len(bands) == 1:
@@ -244,7 +253,7 @@ def footprint_from_rasterio_reader(
     else:
         if not bands:
             bands = reader.indexes
-        mask = create_mask(reader.read(bands), no_data=no_data)
+        mask = create_mask(reader.read(bands), nodata=nodata)
 
     return footprint_from_mask(
         mask,
@@ -254,4 +263,6 @@ def footprint_from_rasterio_reader(
         densify_factor=densify_factor,
         densify_distance=densify_distance,
         simplify_tolerance=simplify_tolerance,
+        convex_hull=convex_hull,
+        holes=holes,
     )

@@ -11,17 +11,17 @@ from shapely.geometry.polygon import Polygon, orient
 
 
 def create_mask(
-    data_array: npt.NDArray[Any], *, no_data: Optional[Union[int, float]] = None
+    data_array: npt.NDArray[Any], *, nodata: Optional[Union[int, float]] = None
 ) -> npt.NDArray[np.uint8]:
     """Produces a mask of valid data in the given numpy ``data_array``.
 
-    Locations in the data array matching the given ``no_data`` value are set to
-    0, all other array locations are set to 255. If ``no_data`` is not provided,
+    Locations in the data array matching the given ``nodata`` value are set to
+    0, all other array locations are set to 255. If ``nodata`` is not provided,
     all array locations are set to 255.
 
     Args:
         data_array (numpy.NDArray[Any]): A 2D or 3D array of raster data.
-        no_data (Optional[Union[int, float]]): The nodata value. If not
+        nodata (Optional[Union[int, float]]): The nodata value. If not
             provided, all array locations are set to 255.
 
     Returns:
@@ -31,12 +31,12 @@ def create_mask(
     if data_array.ndim == 2:
         data_array = data_array[np.newaxis, :]
     shape = data_array.shape
-    if no_data is not None:
+    if nodata is not None:
         mask: npt.NDArray[np.uint8] = np.full(shape, fill_value=0, dtype=np.uint8)
-        if np.isnan(no_data):
+        if np.isnan(nodata):
             mask[~np.isnan(data_array)] = 1
         else:
-            mask[data_array != no_data] = 1
+            mask[data_array != nodata] = 1
         mask = np.sum(mask, axis=0, dtype=np.uint8)
         mask[mask > 0] = 255
     else:

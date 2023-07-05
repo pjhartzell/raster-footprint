@@ -2,24 +2,22 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Union
 
-import rasterio.crs
-from rasterio.transform import Affine
-from shapely.geometry import MultiPolygon, Polygon
+from shapely.geometry import MultiPolygon, Polygon, shape
 
-TRANSFORM = Affine(1, 0, 0, 0, -1, 0)
-CRS = rasterio.crs.CRS.from_epsg(4326)
-
-TEST_DATA_DIRECTORY = Path(__file__).parent / "data" / "geojson"
+TEST_DATA_DIRECTORY = Path(__file__).parent / "data"
 
 
 def read_geojson(name: str) -> Dict[str, Any]:
-    path = (TEST_DATA_DIRECTORY / name).with_suffix(".json")
+    path = (TEST_DATA_DIRECTORY / "geojson" / name).with_suffix(".json")
     with open(path) as f:
         data: Dict[str, Any] = json.load(f)
     return data
 
 
-def check_winding(extent: Union[Polygon, MultiPolygon]) -> None:
+def check_winding(extent: Union[Polygon, MultiPolygon, Dict[str, Any]]) -> None:
+    if isinstance(extent, dict):
+        extent = shape(extent)
+
     if isinstance(extent, Polygon):
         assert extent.exterior.is_ccw
         for interior in extent.interiors:
@@ -30,4 +28,4 @@ def check_winding(extent: Union[Polygon, MultiPolygon]) -> None:
             for interior in polygon.interiors:
                 assert not interior.is_ccw
     else:
-        raise TypeError("extent must be a Polygon or MultiPolygon")
+        raise TypeError("`extent` must be a Polygon, MultiPolygon, or GeoJSON dict")

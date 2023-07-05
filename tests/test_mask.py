@@ -1,12 +1,15 @@
 import numpy as np
 import numpy.typing as npt
 import pytest
+from rasterio import Affine
 from shapely.geometry import shape
 
 from raster_footprint import create_mask
 from raster_footprint.mask import get_mask_extent
 
-from .conftest import TRANSFORM, read_geojson
+from .conftest import read_geojson
+
+TRANSFORM = Affine(1, 0, 0, 0, -1, 0)
 
 
 @pytest.fixture
@@ -50,18 +53,18 @@ def test_create_mask_nodata_none() -> None:
     expected = np.ones((5, 5), dtype=np.uint8) * 255
 
     array_2d = np.random.rand(5, 5)
-    mask = create_mask(array_2d, no_data=None)
+    mask = create_mask(array_2d, nodata=None)
     assert np.array_equal(mask, expected)
 
     array_3d = np.random.rand(2, 5, 5)
-    mask = create_mask(array_3d, no_data=None)
+    mask = create_mask(array_3d, nodata=None)
     assert np.array_equal(mask, expected)
 
 
 def test_create_mask_nan_nodata() -> None:
     array = np.random.rand(5, 5)
     array[2, 2] = np.nan
-    mask = create_mask(array, no_data=np.nan)
+    mask = create_mask(array, nodata=np.nan)
     expected = np.ones((5, 5), dtype=np.uint8) * 255
     expected[2, 2] = 0
     assert np.array_equal(mask, expected)
@@ -70,7 +73,7 @@ def test_create_mask_nan_nodata() -> None:
 def test_create_mask_2d_array() -> None:
     array = np.random.rand(5, 5)
     array[2, 2] = 0
-    mask = create_mask(array, no_data=0)
+    mask = create_mask(array, nodata=0)
     expected = np.ones((5, 5), dtype=np.uint8) * 255
     expected[2, 2] = 0
     assert np.array_equal(mask, expected)
@@ -80,7 +83,7 @@ def test_create_mask_3d_array() -> None:
     array = np.random.rand(2, 5, 5)
     array[0, 2, 2] = 0
     array[1, 1:4, 1:4] = 0
-    mask = create_mask(array, no_data=0)
+    mask = create_mask(array, nodata=0)
     expected = np.ones((5, 5), dtype=np.uint8) * 255
     expected[2, 2] = 0
     assert np.array_equal(mask, expected)
