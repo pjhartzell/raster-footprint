@@ -10,9 +10,12 @@ T = TypeVar("T", Polygon, MultiPolygon)
 def densify_by_factor(
     point_list: List[Tuple[float, float]], factor: int
 ) -> List[Tuple[float, float]]:
-    """Densifies the number of points in a list of points by a ``factor``. For
-    example, a list of 5 points and a factor of 2 will result in 10 points (one
-    new point between each original adjacent points).
+    """Increases the number of points in a list by a factor.
+
+    Equidistant points are added between each pair of adjacent existing points.
+    The number of points added is controlled by the ``factor`` argument. For
+    example, a list of 5 points and a factor of 2 will result in a list of 9
+    points (one new point added between each original set of adjacent points).
 
     Derived from code found at
     https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
@@ -20,13 +23,11 @@ def densify_by_factor(
     Args:
         point_list (List[Tuple[float, float]]): The list of points to be
             densified.
-        factor (int): The factor by which to densify the points. A larger
-            densification factor should be used when reprojection results in
-            greater curvature from the original geometry.
+        factor (int): The factor by which to densify the points.
 
     Returns:
-        List[Tuple[float, float]]: A list of the densified points.
-    """  # noqa: E501
+        List[Tuple[float, float]]: The densified point list.
+    """
     points: Any = np.asarray(point_list)
     densified_number = len(points) * factor
     existing_indices = np.arange(0, densified_number, factor)
@@ -39,11 +40,13 @@ def densify_by_factor(
 def densify_by_distance(
     point_list: List[Tuple[float, float]], distance: float
 ) -> List[Tuple[float, float]]:
-    """Densifies the number of points in a list of points by inserting new
-    points at intervals between each set of successive points. For example, if
-    two successive points in the list are separated by 10 units and a
-    ``distance`` of 2 is provided, 4 new points will be added between the two
-    original points (one new point every 2 units of ``distance``).
+    """Increases the number of points in a list according to a distance interval.
+
+    New points are inserted between each pair of adjacent existing points with the
+    spacing controlled by the ``distance`` argument. For example, if two
+    adjacent points in the list are separated by 10 units and a ``distance`` of
+    2 is provided, 4 new points will be inserted between the two original points
+    (one new point every 2 units of ``distance``).
 
     Derived from code found at
     https://stackoverflow.com/questions/64995977/generating-equidistance-points-along-the-boundary-of-a-polygon-but-cw-ccw
@@ -51,12 +54,10 @@ def densify_by_distance(
     Args:
         point_list (List[Tuple[float, float]]): The list of points to be
             densified.
-        distance (float): The interval at which to insert additional points. A
-            smaller densification distance should be used when reprojection
-            results in greater curvature from the original geometry.
+        distance (float): The interval at which to insert additional points.
 
     Returns:
-        List[Tuple[float, float]]: A list of the densified points.
+        List[Tuple[float, float]]: The densified point list.
     """
     points: Any = np.asarray(point_list)
     dxdy = points[1:, :] - points[:-1, :]
@@ -80,18 +81,20 @@ def densify_polygon(
     factor: Optional[int] = None,
     distance: Optional[float] = None,
 ) -> Polygon:
-    """Adds vertices to a polygon using one of the mutually exclusive
-    ``factor`` or ``distance`` options.
+    """Adds vertices to a polygon.
+
+    Vertices are added according to one of the mutually exclusive ``factor`` or
+    ``distance`` arguments.
 
     Args:
         polygon (Polygon): The polygon to densify.
-        factor (Optional[int]): The factor by which to densify the points. A
-            larger densification factor should be used when reprojection results
-            in greater curvature from the original geometry. Defaults to None.
+        factor (Optional[int]): The factor by which to increase the number of
+            polygon vertices, e.g., a ``factor`` of 2 will double the number of
+            vertices. Mutually exclusive with ``distance``. Defaults to None.
         distance (Optional[float]): The interval at which to insert additional
-            points. A smaller densification distance should be used when
-            reprojection results in greater curvature from the original
-            geometry. Defaults to None.
+            polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
+            every 2 units of distance between existing vertices. Mutually
+            exclusive with ``factor``. Defaults to None.
 
     Returns:
         Polygon: The densified polygon.
@@ -115,15 +118,33 @@ def densify_polygon(
         return polygon
 
 
-def densify_multi_polygon(
-    multi_polygon: MultiPolygon,
+def densify_multipolygon(
+    multipolygon: MultiPolygon,
     *,
     factor: Optional[int] = None,
     distance: Optional[float] = None,
 ) -> MultiPolygon:
+    """Adds vertices to each polygon in a multipolygon.
+
+    Vertices are added according to one of the mutually exclusive ``factor`` or
+    ``distance`` arguments.
+
+    Args:
+        multipolygon (MultiPolygon): The multipolygon to densify.
+        factor (Optional[int]): The factor by which to increase the number of
+            polygon vertices, e.g., a ``factor`` of 2 will double the number of
+            vertices. mutually exclusive with ``distance``.  Defaults to None.
+        distance (Optional[float]): The interval at which to insert additional
+            polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
+            every 2 units of distance between existing vertices.  Mutually
+            exclusive with ``factor``. Defaults to None.
+
+    Returns:
+        MultiPolygon: The densified multipolygon.
+    """
     densified_polygons = [
         densify_polygon(polygon, factor=factor, distance=distance)
-        for polygon in multi_polygon.geoms
+        for polygon in multipolygon.geoms
     ]
     return MultiPolygon(densified_polygons)
 
@@ -134,25 +155,24 @@ def densify_extent(
     factor: Optional[int] = None,
     distance: Optional[float] = None,
 ) -> T:
-    """Adds vertices to a polygon using one of the mutually exclusive
-    ``factor`` or ``distance`` options.
+    """Adds vertices to a polygon or each polygon in a multipolygon.
 
     Args:
-        extent (Union[Polygon, MultiPolygon]): The polygon to densify.
-        factor (Optional[int]): The factor by which to densify the points. A
-            larger densification factor should be used when reprojection results
-            in greater curvature from the original geometry. Defaults to None.
+        extent (T): The polygon or multipolygon to densify.
+        factor (Optional[int]): The factor by which to increase the number of
+            polygon vertices, e.g., a ``factor`` of 2 will double the number of
+            vertices. Mutually exclusive with ``distance``. Defaults to None.
         distance (Optional[float]): The interval at which to insert additional
-            points. A smaller densification distance should be used when
-            reprojection results in greater curvature from the original
-            geometry. Defaults to None.
+            polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
+            every 2 units of distance between existing vertices. Mutually
+            exclusive with ``factor``. Defaults to None.
 
     Returns:
-        Union[Polygon, MultiPolygon]: The densified polygon.
+        T: The densified polygon or multipolygon.
     """
     if isinstance(extent, Polygon):
         return densify_polygon(extent, factor=factor, distance=distance)
     elif isinstance(extent, MultiPolygon):
-        return densify_multi_polygon(extent, factor=factor, distance=distance)
+        return densify_multipolygon(extent, factor=factor, distance=distance)
     else:
         raise TypeError("extent must be a Polygon or MultiPolygon")

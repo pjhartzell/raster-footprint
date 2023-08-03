@@ -13,16 +13,16 @@ from shapely.geometry.polygon import Polygon, orient
 def create_mask(
     data_array: npt.NDArray[Any], *, nodata: Optional[Union[int, float]] = None
 ) -> npt.NDArray[np.uint8]:
-    """Produces a mask of valid data in the given numpy ``data_array``.
+    """Produces a mask of valid data locations in a NumPy array.
 
-    Locations in the data array matching the given ``nodata`` value are set to
-    0, all other array locations are set to 255. If ``nodata`` is not provided,
+    Locations in ``data_array`` matching the given ``nodata`` value are set to
+    0; all other array locations are set to 255. If ``nodata`` is not provided,
     all array locations are set to 255.
 
     Args:
-        data_array (numpy.NDArray[Any]): A 2D or 3D array of raster data.
+        data_array (numpy.NDArray[Any]): A numpy 2D or 3D array of raster data.
         nodata (Optional[Union[int, float]]): The nodata value. If not
-            provided, all array locations are set to 255.
+            provided, all array locations are set to 255. Defaults to None.
 
     Returns:
         numpy.NDArray[numpy.uint8]: A 2D array containing 0s and 255s for
@@ -46,27 +46,31 @@ def create_mask(
 
 def get_mask_extent(
     mask: npt.NDArray[np.uint8],
-    transform: Affine,
     *,
+    transform: Affine = Affine(1, 0, 0, 0, 1, 0),
     convex_hull: bool = False,
     holes: bool = True,
 ) -> Optional[Union[Polygon, MultiPolygon]]:
-    """Produces the convex hull of the data footprint in coordinates defined by
-    the given ``transform``.
+    """Creates a polygon or multipolygon surrounding valid data locations.
+
+    Polygons are created around each contiguous region of valid data locations
+    in the given ``mask``. Valid data locations are defined as locations in the
+    mask with a value of 255.
 
     Args:
         mask (numpy.NDArray[numpy.uint8]): A 2D array containing 0s and 255s
-            for nodata/data pixels.
+            for nodata/data (invalid/valid data) pixels.
         transform (Affine): A rasterio :class:`affine.Affine` object defining
-            the affine transformation from pixel coordinates to the data native
-            CRS coordinates.
-        convex_hull (bool): Whether to return the convex hull of the extracted
-            footprint. Defaults to False.
-        holes (bool): Whether to include holes in the extracted footprint. Has
+            the affine transformation from pixel coordinates to a desired
+            coordinate system. Defaults to an identity transform, which returns
+            polygons based on pixel coordinates.
+        convex_hull (bool): Whether to return the convex hull of the created
+            polygons. Defaults to False.
+        holes (bool): Whether to include holes in the created polygons. Has
             no effect if ``convex_hull`` is True. Defaults to True.
 
     Returns:
-        Optional[Union[Polygon, MultiPolygon]: A polygon or multi-polygon
+        Optional[Union[Polygon, MultiPolygon]: A polygon or multipolygon
         enclosing data pixels in the given ``mask``. The polygon vertex
         coordinates are transformed according to the given ``transform``.
     """

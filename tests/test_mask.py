@@ -90,7 +90,7 @@ def test_create_mask_3d_array() -> None:
 
 
 def test_extent_concave_shell(concave_shell: npt.NDArray[np.uint8]) -> None:
-    extent = get_mask_extent(concave_shell, TRANSFORM)
+    extent = get_mask_extent(concave_shell, transform=TRANSFORM)
     expected = read_geojson("concave-shell")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -98,7 +98,7 @@ def test_extent_concave_shell(concave_shell: npt.NDArray[np.uint8]) -> None:
 def test_extent_convex_hull_of_concave_shell(
     concave_shell: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(concave_shell, TRANSFORM, convex_hull=True)
+    extent = get_mask_extent(concave_shell, transform=TRANSFORM, convex_hull=True)
     expected = read_geojson("convex-hull-of-concave-shell")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -106,7 +106,7 @@ def test_extent_convex_hull_of_concave_shell(
 def test_extent_two_concave_shells(
     two_concave_shells: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(two_concave_shells, TRANSFORM)
+    extent = get_mask_extent(two_concave_shells, transform=TRANSFORM)
     expected = read_geojson("two-concave-shells")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -114,7 +114,7 @@ def test_extent_two_concave_shells(
 def test_extent_convex_hull_of_two_concave_shells(
     two_concave_shells: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(two_concave_shells, TRANSFORM, convex_hull=True)
+    extent = get_mask_extent(two_concave_shells, transform=TRANSFORM, convex_hull=True)
     expected = read_geojson("convex-hull-of-two-concave-shells")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -122,7 +122,7 @@ def test_extent_convex_hull_of_two_concave_shells(
 def test_extent_two_concave_shells_with_holes(
     two_concave_shells_with_holes: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(two_concave_shells_with_holes, TRANSFORM)
+    extent = get_mask_extent(two_concave_shells_with_holes, transform=TRANSFORM)
     expected = read_geojson("two-concave-shells-with-holes")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -130,7 +130,9 @@ def test_extent_two_concave_shells_with_holes(
 def test_extent_convex_hull_of_two_concave_shells_with_holes(
     two_concave_shells_with_holes: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(two_concave_shells_with_holes, TRANSFORM, convex_hull=True)
+    extent = get_mask_extent(
+        two_concave_shells_with_holes, transform=TRANSFORM, convex_hull=True
+    )
     expected = read_geojson("convex-hull-of-two-concave-shells")
     assert shape(extent).normalize() == shape(expected).normalize()
 
@@ -138,6 +140,8 @@ def test_extent_convex_hull_of_two_concave_shells_with_holes(
 def test_extent_two_concave_shells_with_holes_filled(
     two_concave_shells_with_holes: npt.NDArray[np.uint8],
 ) -> None:
-    extent = get_mask_extent(two_concave_shells_with_holes, TRANSFORM, holes=False)
+    extent = get_mask_extent(
+        two_concave_shells_with_holes, transform=TRANSFORM, holes=False
+    )
     expected = read_geojson("two-concave-shells")
     assert shape(extent).normalize() == shape(expected).normalize()
