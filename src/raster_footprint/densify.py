@@ -90,11 +90,11 @@ def densify_polygon(
         polygon (Polygon): The polygon to densify.
         factor (Optional[int]): The factor by which to increase the number of
             polygon vertices, e.g., a ``factor`` of 2 will double the number of
-            vertices. Mutually exclusive with ``distance``. Defaults to None.
+            vertices. Mutually exclusive with ``distance``. Defaults to ``None``.
         distance (Optional[float]): The interval at which to insert additional
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices. Mutually
-            exclusive with ``factor``. Defaults to None.
+            exclusive with ``factor``. Defaults to ``None``.
 
     Returns:
         Polygon: The densified polygon.
@@ -133,11 +133,11 @@ def densify_multipolygon(
         multipolygon (MultiPolygon): The multipolygon to densify.
         factor (Optional[int]): The factor by which to increase the number of
             polygon vertices, e.g., a ``factor`` of 2 will double the number of
-            vertices. mutually exclusive with ``distance``.  Defaults to None.
+            vertices. mutually exclusive with ``distance``.  Defaults to ``None``.
         distance (Optional[float]): The interval at which to insert additional
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices.  Mutually
-            exclusive with ``factor``. Defaults to None.
+            exclusive with ``factor``. Defaults to ``None``.
 
     Returns:
         MultiPolygon: The densified multipolygon.
@@ -161,11 +161,11 @@ def densify_extent(
         extent (T): The polygon or multipolygon to densify.
         factor (Optional[int]): The factor by which to increase the number of
             polygon vertices, e.g., a ``factor`` of 2 will double the number of
-            vertices. Mutually exclusive with ``distance``. Defaults to None.
+            vertices. Mutually exclusive with ``distance``. Defaults to ``None``.
         distance (Optional[float]): The interval at which to insert additional
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices. Mutually
-            exclusive with ``factor``. Defaults to None.
+            exclusive with ``factor``. Defaults to ``None``.
 
     Returns:
         T: The densified polygon or multipolygon.

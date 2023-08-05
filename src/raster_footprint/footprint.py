@@ -3,7 +3,8 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import rasterio
 from numpy import typing as npt
-from rasterio import Affine, DatasetReader
+from rasterio import Affine
+from rasterio.io import DatasetReader
 from rasterio.crs import CRS
 from shapely.geometry import mapping
 
@@ -39,11 +40,11 @@ def footprint_from_mask(
     polygon(s) to within the given ``simplify_tolerance``.
 
     Args:
-        mask (numpy.NDArray[numpy.uint8]): A 2D NumPy array containing 0s and
-            255s for nodata/data (invalid/valid data) pixels.
-        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+        mask (NDArray[uint8]): A 2D NumPy array containing 0s and
+            255s for nodata/data (invalid/valid) pixels.
+        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the given ``mask``.
-        transform (Affine): A rasterio :class:`affine.Affine` object defining
+        transform (Affine): An :class:`affine.Affine` object defining
             the affine transformation from the ``mask`` pixel coordinate system
             to the given ``crs`` coordinate system.
         precision (Optional[int]): The number of decimal places to include in
@@ -51,14 +52,14 @@ def footprint_from_mask(
         densify_factor (Optional[int]): The factor by which to increase the
             number of polygon vertices, e.g., a ``factor`` of 2 will double the
             number of vertices. Mutually exclusive with ``densify_distance``.
-            Defaults to None.
+            Defaults to ``None``.
         densify_distance (Optional[float]): The interval at which to insert
             additional polygon vertices, e.g., a ``distance`` of 2 will insert
             a new vertex every 2 units of distance between existing vertices.
-            Mutually exclusive with ``densify_factor``. Defaults to None.
+            Mutually exclusive with ``densify_factor``. Defaults to ``None``.
         simplify_tolerance (Optional[float]): The maximum distance between
             original polygon vertices and the simplified polygon(s). Unit is
-            geographic decimal degrees. Defaults to None.
+            geographic decimal degrees. Defaults to ``None``.
         convex_hull (bool): Whether to compute the convex hull of any created
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
@@ -97,11 +98,11 @@ def footprint_from_data(
     surrounding valid data locations in the given ``data`` array.
 
     Args:
-        data (npt.NDArray[Any]): A 2D or 3D NumPy array of raster data.
-        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+        data (NDArray[Any]): A 2D or 3D NumPy array of raster data.
+        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the raster data in the given
-            ``numpy_array`.
-        transform (Affine): A rasterio :class:`affine.Affine` object defining
+            ``numpy_array``.
+        transform (Affine): An :class:`affine.Affine` object defining
             the affine transformation from the ``data`` pixel coordinate system
             to the given ``crs`` coordinate system.
         nodata (Optional[Union[int, float]]): The nodata value to use for
@@ -112,14 +113,14 @@ def footprint_from_data(
         densify_factor (Optional[int]): The factor by which to increase the
             number of polygon vertices, e.g., a ``factor`` of 2 will double the
             number of vertices. Mutually exclusive with ``densify_distance``.
-            Defaults to None.
+            Defaults to ``None``.
         densify_distance (Optional[float]): The interval at which to insert
             additional polygon vertices, e.g., a ``distance`` of 2 will insert
             a new vertex every 2 units of distance between existing vertices.
-            Mutually exclusive with ``densify_factor``. Defaults to None.
+            Mutually exclusive with ``densify_factor``. Defaults to ``None``.
         simplify_tolerance (Optional[float]): The maximum distance between
             original polygon vertices and the simplified polygon(s). Unit is
-            geographic decimal degrees. Defaults to None.
+            geographic decimal degrees. Defaults to ``None``.
         convex_hull (bool): Whether to compute the convex hull of any created
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
@@ -161,7 +162,8 @@ def footprint_from_href(
     surrounding valid data locations in a raster file located at the given
     ``href``.
 
-    The file pointed to by ``href`` must be openable by rasterio.
+    The file pointed to by ``href`` must be openable by `rasterio
+    <https://rasterio.readthedocs.io/en/stable/index.html>`_.
 
     Args:
         href (str): An href to a raster data file.
@@ -176,14 +178,14 @@ def footprint_from_href(
         densify_factor (Optional[int]): The factor by which to increase the
             number of polygon vertices, e.g., a ``factor`` of 2 will double the
             number of vertices. Mutually exclusive with ``densify_distance``.
-            Defaults to None.
+            Defaults to ``None``.
         densify_distance (Optional[float]): The interval at which to insert
             additional polygon vertices, e.g., a ``distance`` of 2 will insert
             a new vertex every 2 units of distance between existing vertices.
-            Mutually exclusive with ``densify_factor``. Defaults to None.
+            Mutually exclusive with ``densify_factor``. Defaults to ``None``.
         simplify_tolerance (Optional[float]): The maximum distance between
             original polygon vertices and the simplified polygon(s). Unit is
-            geographic decimal degrees. Defaults to None.
+            geographic decimal degrees. Defaults to ``None``.
         convex_hull (bool): Whether to compute the convex hull of any created
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
@@ -234,7 +236,7 @@ def footprint_from_rasterio_reader(
     call.
 
     Args:
-        reader (DatasetReader): A rasterio dataset reader object.
+        reader (DatasetReader): A :class:`rasterio.io.DatasetReader` object.
         nodata (Optional[Union[int, float]]): Explicitly sets the nodata value
             to use for creating a data/nodata mask array. If not provided, the
             nodata value in the source file metadata is used. If not provided
@@ -246,14 +248,14 @@ def footprint_from_rasterio_reader(
         densify_factor (Optional[int]): The factor by which to increase the
             number of polygon vertices, e.g., a ``factor`` of 2 will double the
             number of vertices. Mutually exclusive with ``densify_distance``.
-            Defaults to None.
+            Defaults to ``None``.
         densify_distance (Optional[float]): The interval at which to insert
             additional polygon vertices, e.g., a ``distance`` of 2 will insert
             a new vertex every 2 units of distance between existing vertices.
-            Mutually exclusive with ``densify_factor``. Defaults to None.
+            Mutually exclusive with ``densify_factor``. Defaults to ``None``.
         simplify_tolerance (Optional[float]): The maximum distance between
             original polygon vertices and the simplified polygon(s). Unit is
-            geographic decimal degrees. Defaults to None.
+            geographic decimal degrees. Defaults to ``None``.
         convex_hull (bool): Whether to compute the convex hull of any created
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.

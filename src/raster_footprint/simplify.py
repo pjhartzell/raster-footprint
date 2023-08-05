@@ -16,7 +16,7 @@ def simplify_polygon(polygon: Polygon, *, tolerance: Optional[float] = None) -> 
         polygon (Polygon): The polygon to simplify.
         tolerance (Optional[float]): The maximum distance between the original
             polygon vertices and the simplified polygon. Unit is geographic
-            decimal degrees. Defaults to None.
+            decimal degrees. Defaults to ``None``.
 
     Returns:
         Polygon: The simplified polygon.
@@ -39,7 +39,7 @@ def simplify_multipolygon(
         multipolygon (MultiPolygon): The multipolygon to simplify.
         tolerance (Optional[float]): The maximum distance between original
             polygon vertices and the simplified polygon. Unit is geographic
-            decimal degrees. Defaults to None.
+            decimal degrees. Defaults to ``None``.
 
     Returns:
         MultiPolygon: The simplified multipolygon.
@@ -59,7 +59,7 @@ def simplify_extent(extent: T, *, tolerance: Optional[float] = None) -> T:
         extent (T): The polygon or multipolygon to simplify.
         tolerance (Optional[float]): The maximum distance between original
             polygon vertices and the simplified polygon. Unit is geographic
-            decimal degrees. Defaults to None.
+            decimal degrees. Defaults to ``None``.
 
     Returns:
         T: The simplified polygon or multipolygon.

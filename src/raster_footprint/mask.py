@@ -20,12 +20,12 @@ def create_mask(
     all array locations are set to 255.
 
     Args:
-        data_array (numpy.NDArray[Any]): A numpy 2D or 3D array of raster data.
+        data_array (numpy.NDArray[Any]): A NumPy 2D or 3D array of raster data.
         nodata (Optional[Union[int, float]]): The nodata value. If not
-            provided, all array locations are set to 255. Defaults to None.
+            provided, all array locations are set to 255. Defaults to ``None``.
 
     Returns:
-        numpy.NDArray[numpy.uint8]: A 2D array containing 0s and 255s for
+        numpy.NDArray[numpy.uint8]: A 2D NumPy array containing 0s and 255s for
         nodata/data pixels.
     """
     if data_array.ndim == 2:
@@ -58,9 +58,9 @@ def get_mask_extent(
     mask with a value of 255.
 
     Args:
-        mask (numpy.NDArray[numpy.uint8]): A 2D array containing 0s and 255s
-            for nodata/data (invalid/valid data) pixels.
-        transform (Affine): A rasterio :class:`affine.Affine` object defining
+        mask (numpy.NDArray[numpy.uint8]): A 2D NumPy array containing 0s and 255s
+            for nodata/data (invalid/valid) pixels.
+        transform (Affine): An :class:`affine.Affine` object defining
             the affine transformation from pixel coordinates to a desired
             coordinate system. Defaults to an identity transform, which returns
             polygons based on pixel coordinates.

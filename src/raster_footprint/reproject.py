@@ -20,7 +20,7 @@ def reproject_polygon(
 
     Args:
         polygon (Polygon): The polygon to reproject.
-        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the given ``polygon``.
         precision (Optional[int]): The number of decimal places to include in
             the reprojected polygon vertex coordinates. Defaults to 7.
@@ -47,7 +47,7 @@ def reproject_multipolygon(
 
     Args:
         multipolygon (MultiPolygon): The multipolygon to reproject.
-        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the given ``multipolygon``.
         precision (Optional[int]): The number of decimal places to include in
             the final polygon vertex coordinates. Defaults to 7.
@@ -75,7 +75,7 @@ def reproject_extent(
 
     Args:
         extent (T): The polygon or multipolygon to reproject.
-        crs (CRS): A rasterio :class:`rasterio.crs.CRS` object defining the
+        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the given ``extent``.
         precision (Optional[int]): The number of decimal places to include in
             the final polygon vertex coordinates. Defaults to 7.
