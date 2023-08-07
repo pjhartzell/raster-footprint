@@ -149,8 +149,8 @@ def densify_multipolygon(
     return MultiPolygon(densified_polygons)
 
 
-def densify_extent(
-    extent: T,
+def densify_geometry(
+    geometry: T,
     *,
     factor: Optional[int] = None,
     distance: Optional[float] = None,
@@ -158,7 +158,7 @@ def densify_extent(
     """Adds vertices to a polygon or each polygon in a multipolygon.
 
     Args:
-        extent (T): The polygon or multipolygon to densify.
+        geometry (T): The polygon or multipolygon to densify.
         factor (Optional[int]): The factor by which to increase the number of
             polygon vertices, e.g., a ``factor`` of 2 will double the number of
             vertices. Mutually exclusive with ``distance``. Defaults to ``None``.
@@ -170,9 +170,9 @@ def densify_extent(
     Returns:
         T: The densified polygon or multipolygon.
     """
-    if isinstance(extent, Polygon):
-        return densify_polygon(extent, factor=factor, distance=distance)
-    elif isinstance(extent, MultiPolygon):
-        return densify_multipolygon(extent, factor=factor, distance=distance)
+    if isinstance(geometry, Polygon):
+        return densify_polygon(geometry, factor=factor, distance=distance)
+    elif isinstance(geometry, MultiPolygon):
+        return densify_multipolygon(geometry, factor=factor, distance=distance)
     else:
-        raise TypeError("extent must be a Polygon or MultiPolygon")
+        raise TypeError("geometry must be a Polygon or MultiPolygon")

@@ -30,9 +30,9 @@ def create_mask(
     """
     if data_array.ndim == 2:
         data_array = data_array[np.newaxis, :]
-    shape = data_array.shape
+    array_shape = data_array.shape
     if nodata is not None:
-        mask: npt.NDArray[np.uint8] = np.full(shape, fill_value=0, dtype=np.uint8)
+        mask: npt.NDArray[np.uint8] = np.full(array_shape, fill_value=0, dtype=np.uint8)
         if np.isnan(nodata):
             mask[~np.isnan(data_array)] = 1
         else:
@@ -40,22 +40,21 @@ def create_mask(
         mask = np.sum(mask, axis=0, dtype=np.uint8)
         mask[mask > 0] = 255
     else:
-        mask = np.full(shape[-2:], fill_value=255, dtype=np.uint8)
+        mask = np.full(array_shape[-2:], fill_value=255, dtype=np.uint8)
     return mask
 
 
-def get_mask_extent(
+def get_mask_geometry(
     mask: npt.NDArray[np.uint8],
     *,
     transform: Affine = Affine(1, 0, 0, 0, 1, 0),
     convex_hull: bool = False,
     holes: bool = True,
 ) -> Optional[Union[Polygon, MultiPolygon]]:
-    """Creates a polygon or multipolygon surrounding valid data locations.
+    """Creates a polygon or multipolygon surrounding valid data pixels.
 
-    Polygons are created around each contiguous region of valid data locations
-    in the given ``mask``. Valid data locations are defined as locations in the
-    mask with a value of 255.
+    Polygons are created around each contiguous region of valid data pixels
+    in the given ``mask``, where a valid data pixel has a value of 255.
 
     Args:
         mask (numpy.NDArray[numpy.uint8]): A 2D NumPy array containing 0s and 255s
@@ -71,10 +70,10 @@ def get_mask_extent(
 
     Returns:
         Optional[Union[Polygon, MultiPolygon]: A polygon or multipolygon
-        enclosing data pixels in the given ``mask``. The polygon vertex
+        enclosing valid data pixels in the given ``mask``. The polygon vertex
         coordinates are transformed according to the given ``transform``.
     """
-    data_polygons = [
+    polygons = [
         shape(polygon_dict)
         for polygon_dict, region_value in rasterio.features.shapes(
             mask, transform=transform
@@ -82,25 +81,25 @@ def get_mask_extent(
         if region_value == 255
     ]
 
-    if not data_polygons:
+    if not polygons:
         return None
 
     if not holes and not convex_hull:
-        data_polygons = [Polygon(poly.exterior.coords) for poly in data_polygons]
-        unioned_polygons = unary_union(data_polygons)
+        polygons = [Polygon(poly.exterior.coords) for poly in polygons]
+        unioned_polygons = unary_union(polygons)
         if isinstance(unioned_polygons, Polygon):
-            data_polygons = [unioned_polygons]
+            polygons = [unioned_polygons]
         else:
-            data_polygons = list(unioned_polygons.geoms)
+            polygons = list(unioned_polygons.geoms)
 
-    data_polygons = [orient(poly) for poly in data_polygons]
+    polygons = [orient(poly) for poly in polygons]
 
-    if len(data_polygons) == 1:
-        data_extent = data_polygons[0]
+    if len(polygons) == 1:
+        geometry = polygons[0]
     else:
-        data_extent = MultiPolygon(data_polygons)
+        geometry = MultiPolygon(polygons)
 
     if convex_hull:
-        data_extent = orient(data_extent.convex_hull)
+        geometry = orient(geometry.convex_hull)
 
-    return data_extent
+    return geometry
