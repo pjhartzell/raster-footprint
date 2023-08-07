@@ -4,23 +4,24 @@ import numpy as np
 import rasterio
 from numpy import typing as npt
 from rasterio import Affine
-from rasterio.io import DatasetReader
 from rasterio.crs import CRS
+from rasterio.io import DatasetReader
 from shapely.geometry import mapping
 
-from .densify import densify_extent
-from .mask import create_mask, get_mask_extent
-from .reproject import DEFAULT_PRECISION, reproject_extent
-from .simplify import simplify_extent
+from .densify import densify_geometry
+from .mask import create_mask, get_mask_geometry
+from .reproject import DEFAULT_PRECISION, reproject_geometry
+from .simplify import simplify_geometry
 
 # TODO: change holes default to False
 
 
 def footprint_from_mask(
     mask: npt.NDArray[np.uint8],
-    crs: CRS,
     transform: Affine,
+    source_crs: CRS,
     *,
+    destination_crs: CRS = CRS.from_epsg(4326),
     precision: int = DEFAULT_PRECISION,
     densify_factor: Optional[int] = None,
     densify_distance: Optional[float] = None,
@@ -28,25 +29,27 @@ def footprint_from_mask(
     convex_hull: bool = False,
     holes: bool = True,
 ) -> Optional[Dict[str, Any]]:
-    """Produces a GeoJSON dictionary containing a polygon or multipolygon
+    """Produces a GeoJSON dictionary containing a polygon or multipolygon geometry
     surrounding valid data locations in the given ``mask`` array.
 
-    A polygon or multipolygon surrounding valid data pixels is extracted from
-    the given ``mask`` array. The polygon(s) are densified with additional
-    vertices, reprojected to the WGS84 (EPSG:4326) coordinate system, and then
-    simplified by reducing the number of polygon vertices. Densifying the
-    polygon(s) prior to reprojection reduces projection distortion error.
-    Simplification removes vertices that are redundant in defining the
-    polygon(s) to within the given ``simplify_tolerance``.
+    A polygon or multipolygon geometry surrounding valid data pixels is extracted from
+    the given ``mask`` array. The geometry polygon(s) are densified with additional
+    vertices, reprojected to the ``destination_crs``, and then simplified by reducing
+    the number of vertices. Densifying the polygon(s) prior to reprojection reduces
+    projection distortion error. Simplification removes vertices that are redundant
+    in defining the polygon(s) to within the given ``simplify_tolerance``.
 
     Args:
         mask (NDArray[uint8]): A 2D NumPy array containing 0s and
             255s for nodata/data (invalid/valid) pixels.
-        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
-            coordinate reference system of the given ``mask``.
         transform (Affine): An :class:`affine.Affine` object defining
             the affine transformation from the ``mask`` pixel coordinate system
             to the given ``crs`` coordinate system.
+        source_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            coordinate reference system of the given ``mask``.
+        destination_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            desired coordinate reference system of output footprint. Defaults to
+            EPSG:4326 (WGS84).
         precision (Optional[int]): The number of decimal places to include in
             the final footprint polygon vertex coordinates. Defaults to 7.
         densify_factor (Optional[int]): The factor by which to increase the
@@ -70,22 +73,30 @@ def footprint_from_mask(
         Optional[Dict[str, Any]]: A GeoJSON dictionary containing the
         footprint polygon or multipolygon.
     """
-    extent = get_mask_extent(
+    geometry = get_mask_geometry(
         mask, transform=transform, convex_hull=convex_hull, holes=holes
     )
-    if extent is None:
+
+    if geometry is None:
         return None
-    densified = densify_extent(extent, factor=densify_factor, distance=densify_distance)
-    reprojected = reproject_extent(densified, crs, precision=precision)
-    simplified = simplify_extent(reprojected, tolerance=simplify_tolerance)
-    return mapping(simplified)  # type: ignore
+
+    densified = densify_geometry(
+        geometry, factor=densify_factor, distance=densify_distance
+    )
+    reprojected = reproject_geometry(
+        source_crs, destination_crs, densified, precision=precision
+    )
+    simplified = simplify_geometry(reprojected, tolerance=simplify_tolerance)
+
+    return mapping(simplified)
 
 
 def footprint_from_data(
     data: npt.NDArray[Any],
-    crs: CRS,
     transform: Affine,
+    source_crs: CRS,
     *,
+    destination_crs: CRS = CRS.from_epsg(4326),
     nodata: Optional[Union[int, float]] = None,
     precision: int = DEFAULT_PRECISION,
     densify_factor: Optional[int] = None,
@@ -99,12 +110,14 @@ def footprint_from_data(
 
     Args:
         data (NDArray[Any]): A 2D or 3D NumPy array of raster data.
-        crs (CRS): A :class:`rasterio.crs.CRS` object defining the
-            coordinate reference system of the raster data in the given
-            ``numpy_array``.
         transform (Affine): An :class:`affine.Affine` object defining
-            the affine transformation from the ``data`` pixel coordinate system
+            the affine transformation from the ``mask`` pixel coordinate system
             to the given ``crs`` coordinate system.
+        source_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            coordinate reference system of the given ``mask``.
+        destination_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            desired coordinate reference system of output footprint. Defaults to
+            EPSG:4326 (WGS84).
         nodata (Optional[Union[int, float]]): The nodata value to use for
             creating a data/nodata mask array. If not provided, a footprint for
             the entire raster, including nodata pixels, is returned.
@@ -134,8 +147,9 @@ def footprint_from_data(
     mask = create_mask(data, nodata=nodata)
     return footprint_from_mask(
         mask,
-        crs,
         transform,
+        source_crs,
+        destination_crs=destination_crs,
         precision=precision,
         densify_factor=densify_factor,
         densify_distance=densify_distance,
@@ -148,6 +162,7 @@ def footprint_from_data(
 def footprint_from_href(
     href: str,
     *,
+    destination_crs: CRS = CRS.from_epsg(4326),
     nodata: Optional[Union[int, float]] = None,
     precision: int = DEFAULT_PRECISION,
     densify_factor: Optional[int] = None,
@@ -167,6 +182,9 @@ def footprint_from_href(
 
     Args:
         href (str): An href to a raster data file.
+        destination_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            desired coordinate reference system of output footprint. Defaults to
+            EPSG:4326 (WGS84).
         nodata (Optional[Union[int, float]]): Explicitly sets the nodata value
             to use for creating a data/nodata mask array. If not provided, the
             nodata value in the source file metadata is used. If not provided
@@ -205,6 +223,7 @@ def footprint_from_href(
     with rasterio.open(href) as source:
         return footprint_from_rasterio_reader(
             source,
+            destination_crs=destination_crs,
             precision=precision,
             densify_factor=densify_factor,
             densify_distance=densify_distance,
@@ -220,6 +239,7 @@ def footprint_from_href(
 def footprint_from_rasterio_reader(
     reader: DatasetReader,
     *,
+    destination_crs: CRS = CRS.from_epsg(4326),
     nodata: Optional[Union[int, float]] = None,
     precision: int = DEFAULT_PRECISION,
     densify_factor: Optional[int] = None,
@@ -237,6 +257,9 @@ def footprint_from_rasterio_reader(
 
     Args:
         reader (DatasetReader): A :class:`rasterio.io.DatasetReader` object.
+        destination_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
+            desired coordinate reference system of output footprint. Defaults to
+            EPSG:4326 (WGS84).
         nodata (Optional[Union[int, float]]): Explicitly sets the nodata value
             to use for creating a data/nodata mask array. If not provided, the
             nodata value in the source file metadata is used. If not provided
@@ -300,8 +323,9 @@ def footprint_from_rasterio_reader(
 
     return footprint_from_mask(
         mask,
-        reader.crs,
         reader.transform,
+        reader.crs,
+        destination_crs=destination_crs,
         precision=precision,
         densify_factor=densify_factor,
         densify_distance=densify_distance,

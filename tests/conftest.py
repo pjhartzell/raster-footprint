@@ -14,18 +14,18 @@ def read_geojson(name: str) -> Dict[str, Any]:
     return data
 
 
-def check_winding(extent: Union[Polygon, MultiPolygon, Dict[str, Any]]) -> None:
-    if isinstance(extent, dict):
-        extent = shape(extent)
+def check_winding(geometry: Union[Polygon, MultiPolygon, Dict[str, Any]]) -> None:
+    if isinstance(geometry, dict):
+        geometry = shape(geometry)
 
-    if isinstance(extent, Polygon):
-        assert extent.exterior.is_ccw
-        for interior in extent.interiors:
+    if isinstance(geometry, Polygon):
+        assert geometry.exterior.is_ccw
+        for interior in geometry.interiors:
             assert not interior.is_ccw
-    elif isinstance(extent, MultiPolygon):
-        for polygon in extent.geoms:
+    elif isinstance(geometry, MultiPolygon):
+        for polygon in geometry.geoms:
             assert polygon.exterior.is_ccw
             for interior in polygon.interiors:
                 assert not interior.is_ccw
     else:
-        raise TypeError("`extent` must be a Polygon, MultiPolygon, or GeoJSON dict")
+        raise TypeError("'geometry' must be a Polygon, MultiPolygon, or GeoJSON dict")

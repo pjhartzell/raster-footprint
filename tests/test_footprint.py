@@ -13,11 +13,10 @@ import numpy as np
 import pytest
 import rasterio
 from numpy import typing as npt
+from raster_footprint.footprint import footprint_from_data, footprint_from_href
 from rasterio import Affine
 from rasterio.crs import CRS
 from shapely.geometry import shape
-
-from raster_footprint.footprint import footprint_from_data, footprint_from_href
 
 from .conftest import TEST_DATA_DIRECTORY, check_winding, read_geojson
 
@@ -52,7 +51,7 @@ def test_no_footprint() -> None:
     data_array = np.zeros((3, 3), dtype=np.uint8)
     crs = "EPSG:4326"
     transform = Affine(1, 0, 0, 0, -1, 0)
-    assert footprint_from_data(data_array, crs, transform, nodata=0) is None
+    assert footprint_from_data(data_array, transform, crs, nodata=0) is None
 
 
 def test_modis(modis_href_data_crs_transform: HrefDataCrsTransform) -> None:
@@ -63,7 +62,7 @@ def test_modis(modis_href_data_crs_transform: HrefDataCrsTransform) -> None:
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
-    data_footprint = footprint_from_data(data_array, crs, transform, nodata=32767)
+    data_footprint = footprint_from_data(data_array, transform, crs, nodata=32767)
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
 
@@ -76,7 +75,7 @@ def test_modis_with_nodata(modis_href_data_crs_transform: HrefDataCrsTransform) 
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
-    data_footprint = footprint_from_data(data_array, crs, transform)
+    data_footprint = footprint_from_data(data_array, transform, crs)
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
 
@@ -90,7 +89,7 @@ def test_modis_precision(modis_href_data_crs_transform: HrefDataCrsTransform) ->
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, precision=1
+        data_array, transform, crs, nodata=32767, precision=1
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -107,7 +106,7 @@ def test_modis_densify_factor(
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, densify_factor=2
+        data_array, transform, crs, nodata=32767, densify_factor=2
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -124,7 +123,7 @@ def test_modis_densify_distance(
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, densify_distance=100000
+        data_array, transform, crs, nodata=32767, densify_distance=100000
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -141,7 +140,7 @@ def test_modis_simplify_tolerance(
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, simplify_tolerance=0.05
+        data_array, transform, crs, nodata=32767, simplify_tolerance=0.05
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -163,8 +162,8 @@ def test_modis_densify_distance_and_simplify_tolerance(
 
     data_footprint = footprint_from_data(
         data_array,
-        crs,
         transform,
+        crs,
         nodata=32767,
         densify_distance=100000,
         simplify_tolerance=0.01,
@@ -182,7 +181,7 @@ def test_modis_convex_hull(modis_href_data_crs_transform: HrefDataCrsTransform) 
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, convex_hull=True
+        data_array, transform, crs, nodata=32767, convex_hull=True
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -197,7 +196,7 @@ def test_modis_no_holes(modis_href_data_crs_transform: HrefDataCrsTransform) -> 
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, crs, transform, nodata=32767, holes=False
+        data_array, transform, crs, nodata=32767, holes=False
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
