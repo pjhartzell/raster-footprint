@@ -11,7 +11,7 @@ creating raster footprints.
 
 .. note::
 
-   This package is in Pre-Alpha development status. It is not ready for production use.
+   This package is in Beta development status. Use at your own risk.
 
 .. toctree::
    :maxdepth: 2
