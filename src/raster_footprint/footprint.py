@@ -13,8 +13,6 @@ from .mask import create_mask, get_mask_geometry
 from .reproject import DEFAULT_PRECISION, reproject_geometry
 from .simplify import simplify_geometry
 
-# TODO: change holes default to False
-
 
 def footprint_from_mask(
     mask: npt.NDArray[np.uint8],

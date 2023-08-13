@@ -16,17 +16,17 @@ from .reproject import reproject_geometry
 from .simplify import simplify_geometry
 
 __all__ = [
+    "densify_by_distance",
+    "densify_by_factor",
+    "densify_geometry",
+    "densify_multipolygon",
+    "densify_polygon",
     "footprint_from_data",
     "footprint_from_href",
     "footprint_from_mask",
     "footprint_from_rasterio_reader",
     "create_mask",
     "get_mask_geometry",
-    "densify_by_distance",
-    "densify_by_factor",
-    "densify_polygon",
-    "densify_multipolygon",
-    "densify_geometry",
     "reproject_geometry",
     "simplify_geometry",
 ]

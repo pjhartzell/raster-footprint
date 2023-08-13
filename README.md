@@ -2,6 +2,7 @@
 
 [![CI Status](https://img.shields.io/github/actions/workflow/status/pjhartzell/raster-footprint/ci.yaml?style=for-the-badge&label=CI)](https://github.com/pjhartzell/raster-footprint/actions/workflows/ci.yaml)
 [![Read the Docs](https://img.shields.io/readthedocs/antimeridian?style=for-the-badge)](https://raster-footprint.readthedocs.io/en/latest/)
+[![PyPI](https://img.shields.io/pypi/v/raster-footprint?style=for-the-badge)](https://pypi.org/project/raster-footprint/)
 
 [![GitHub](https://img.shields.io/github/license/pjhartzell/raster-footprint?style=for-the-badge)](https://github.com/pjhartzell/raster-footprint/blob/main/LICENSE)
 
@@ -9,12 +10,8 @@ Create GeoJSON geometries that bound valid (not "nodata" pixels) raster data. De
 
 ## Usage
 
-Clone this repository and install:
-
 ```shell
-git clone https://github.com/pjhartzell/raster-footprint
-cd raster-footprint
-pip install .
+pip install raster-footprint
 ```
 
 Import and call one of the footprint functions with some options:
