@@ -5,7 +5,7 @@ authors = [{ name = "Preston Hartzell", email = "preston.hartzell@gmail.com" }]
 description = "Create GeoJSON geometries that bound the extents of valid data in a raster."
 readme = "README.md"
 requires-python = ">=3.8"
-keywords = ["geojson", "raster", "footprint", "rasterio"]
+keywords = ["geojson", "footprint", "rasterio", "shapely"]
 license = { text = "Apache-2.0" }
 classifiers = [
     "Programming Language :: Python :: 3",
