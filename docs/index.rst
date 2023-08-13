@@ -7,22 +7,22 @@ raster-footprint
 ================
 
 A Python package for creating `GeoJSON <https://datatracker.ietf.org/doc/html/rfc7946>`_
-geometries that bound valid data in a geospatial raster.
+geometries that bound valid data in a geospatial rasters.
 
 
 What is a raster footprint?
 ---------------------------
 
 One or more polygons that surround valid data in a raster, or a single polygon
-surrounding the entire raster grid.
+surrounding the entire raster grid. For example, a single polygon that bounds the entire
+raster grid an ESA WorldCover tile:
 
-.. figure:: img/esa-worldcover-tile.png
+.. image:: img/esa-worldcover-tile.png
    :alt: ESA WorldCover tile
-   :figclass: align-center
 
-   Footprint (red polygon) of an ESA WorldCover raster tile
+|
 
-The polygon data is stored in a `GeoJSON
+The polygon is stored in a `GeoJSON
 <https://datatracker.ietf.org/doc/html/rfc7946>`_ geometry object.
 
 .. code-block:: json
@@ -47,27 +47,27 @@ What are the challenges?
 By definition, `GeoJSON <https://datatracker.ietf.org/doc/html/rfc7946>`_ geometries
 contain point sequences with coordinates referenced to the WGS84 (EPSG:4326) datum.
 However, most geospatial raster products exist in a projected coordinate system that is
-distorted with respect to WGS84. This can lead to gaps between the raster data and 
-polygon boundaries unless additional polygon vertices are inserted prior to transforming
-the polygons to WGS84.
+distorted with respect to WGS84. This leads to gaps between the raster data and the
+`GeoJSON <https://datatracker.ietf.org/doc/html/rfc7946>`_ polygons unless additional
+polygon vertices are inserted prior to transformation to WGS84.
 
 Many geospatial rasters also contain pixels that do not contain data, commonly termed
-"nodata" pixels. Excluding these nodata pixels can lead to many small polygons and
-polygons with holes, thereby increasing the complexity of the raster footprint geometry
-object.
+"nodata" pixels. We can create raster footprints that only bound areas of valid data by
+excluding these nodata pixels. However, this often increases the number and complexity
+of the polygons, easily producing `GeoJSON
+<https://datatracker.ietf.org/doc/html/rfc7946>`_ geometry objects with tens of
+thousands of coordinates that require multiple megabytes when stored to disk.
 
-A raster footprint geometry must therefore strike a balance between maximizing the
-fidelity with which the geometry captures the spatial extent of valid data (not "nodata"
-pixels) and the pragmatic desire to limit the number polygon vertices to a reasonable
-amount.
+The goal is to balance the competing interests of maximizing the fidelity with which a
+footprint captures the spatial extent of valid raster data in the WGS84 datum and the
+desire to limit the footprint geometry to a reasonable number of coordinates.
 
 
-What does the raster-footprint package provide?
+How does the raster-footprint package help?
 -----------------------------------------------
 
-A convenient mechanism for creating and tuning raster footprints via a relatively thin
-wrapper around `rasterio <https://rasterio.readthedocs.io/en/stable/index.html>`_ and
-`Shapely <https://shapely.readthedocs.io/en/stable/manual.html>`_. \
+The raster-footprint package provides an API for creating footprints with options to
+tune acceptable projection error and reduce footprint complexity. 
 
 *Use a variety of data sources:*
 
@@ -80,20 +80,11 @@ wrapper around `rasterio <https://rasterio.readthedocs.io/en/stable/index.html>`
 - `NumPy <https://numpy.org/doc/stable/index.html>`_ arrays of mask values (arrays of 0s
   and 255s for nodata/data pixels)
 
-*Be selective:*
-
-- choose one or more bands from a multiband raster for footprint creation
-
-*Specify a CRS:*
-
-- specify a CRS other than WGS84 for the footprint (caution - invalid `GeoJSON
-  <https://datatracker.ietf.org/doc/html/rfc7946>`_!)
-
 *Mitigate projection distortion effects:*
 
 - insert additional polygon vertices via a densification factor or densification distance
 
-*Simplify footprint geometry:*
+*Reduce footprint complexity:*
 
 - use the entire raster grid, i.e., include nodata pixels
 - apply a convex hull to the footprint
@@ -102,6 +93,14 @@ wrapper around `rasterio <https://rasterio.readthedocs.io/en/stable/index.html>`
   <https://en.wikipedia.org/wiki/Ramer%E2%80%93Douglas%E2%80%93Peucker_algorithm>`_
   algorithm
 
+*Be selective:*
+
+- choose one or more bands from a multiband raster for footprint creation
+
+*Specify a CRS:*
+
+- specify a CRS other than WGS84 for the footprint (caution - invalid `GeoJSON
+  <https://datatracker.ietf.org/doc/html/rfc7946>`_!)
 
 
 .. toctree::
