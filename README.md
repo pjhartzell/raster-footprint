@@ -34,7 +34,7 @@ See the [API documentation](https://raster-footprint.readthedocs.io/) for availa
 Clone and install in editable mode with the development optional dependencies:
 
 ```shell
-git https://github.com/pjhartzell/raster-footprint
+git clone https://github.com/pjhartzell/raster-footprint
 cd raster-footprint
 pip install -e ".[dev,docs]"
 ```
