@@ -11,9 +11,9 @@ T = TypeVar("T", Polygon, MultiPolygon)
 
 
 def reproject_geometry(
+    geometry: T,
     source_crs: CRS,
     destination_crs: CRS,
-    geometry: T,
     *,
     precision: Optional[int] = DEFAULT_PRECISION,
 ) -> T:
@@ -23,11 +23,11 @@ def reproject_geometry(
     Duplicate points caused by rounding are removed.
 
     Args:
+        geometry (T): The polygon or multipolygon to reproject.
         source_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the input ``geometry``.
         destination_crs (CRS): A :class:`rasterio.crs.CRS` object defining the
             coordinate reference system of the output geometry.
-        geometry (T): The polygon or multipolygon to reproject.
         precision (Optional[int]): The number of decimal places to include in
             the final polygon vertex coordinates. Defaults to 7.
 

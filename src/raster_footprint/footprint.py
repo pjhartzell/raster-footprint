@@ -82,7 +82,7 @@ def footprint_from_mask(
         geometry, factor=densify_factor, distance=densify_distance
     )
     reprojected = reproject_geometry(
-        source_crs, destination_crs, densified, precision=precision
+        densified, source_crs, destination_crs, precision=precision
     )
     simplified = simplify_geometry(reprojected, tolerance=simplify_tolerance)
 
