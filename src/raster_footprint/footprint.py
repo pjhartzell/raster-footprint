@@ -8,9 +8,10 @@ from rasterio.crs import CRS
 from rasterio.io import DatasetReader
 from shapely.geometry import mapping
 
+from .constants import DEFAULT_PRECISION
 from .densify import densify_geometry
 from .mask import create_mask, get_mask_geometry
-from .reproject import DEFAULT_PRECISION, reproject_geometry
+from .reproject import reproject_geometry
 from .simplify import simplify_geometry
 
 

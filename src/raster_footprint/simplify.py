@@ -1,8 +1,6 @@
-from typing import Optional, TypeVar
+from typing import Optional
 
-from shapely.geometry import MultiPolygon, Polygon
-
-T = TypeVar("T", Polygon, MultiPolygon)
+from .constants import T
 
 
 def simplify_geometry(geometry: T, *, tolerance: Optional[float] = None) -> T:

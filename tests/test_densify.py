@@ -1,7 +1,6 @@
 import pytest
-from shapely.geometry import Point, shape
-
 from raster_footprint import densify_by_distance, densify_by_factor, densify_geometry
+from shapely.geometry import Point, shape
 
 from .conftest import check_winding, read_geojson
 
@@ -80,6 +79,31 @@ def test_densify_multi_polygon_with_holes() -> None:
         for interior in polygon.interiors:
             assert len(interior.coords) == 7
     check_winding(densified_by_distance)
+
+
+def test_densify_precision() -> None:
+    def check_precision(geometry, precision):
+        for polygon in geometry.geoms:
+            for coord in polygon.exterior.coords:
+                for value in coord:
+                    assert len(str(value).split(".")[1]) <= precision
+            for interior in polygon.interiors:
+                for coord in interior.coords:
+                    for value in coord:
+                        assert len(str(value).split(".")[1]) <= precision
+
+    precision = 6
+    multipolygon = shape(
+        read_geojson("two-concave-shells-each-with-two-holes-wkt-sinusoidal")
+    )
+
+    densified_by_factor = densify_geometry(multipolygon, factor=2, precision=precision)
+    check_precision(densified_by_factor, precision)
+
+    densified_by_distance = densify_geometry(
+        multipolygon, distance=10000, precision=precision
+    )
+    check_precision(densified_by_distance, precision)
 
 
 def test_double_option_fails() -> None:

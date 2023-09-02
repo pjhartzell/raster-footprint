@@ -1,13 +1,11 @@
-from typing import Optional, TypeVar
+from typing import Optional
 
 from rasterio.crs import CRS
 from rasterio.warp import transform_geom
 from shapely.constructive import remove_repeated_points
-from shapely.geometry import MultiPolygon, Polygon, shape
+from shapely.geometry import shape
 
-DEFAULT_PRECISION = 7
-
-T = TypeVar("T", Polygon, MultiPolygon)
+from .constants import DEFAULT_PRECISION, T
 
 
 def reproject_geometry(
