@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Added a `precision` option to the densify functions ([#25](https://github.com/pjhartzell/raster-footprint/issues/25))
+
 ### Changed
 
-- Move `geometry` argument to first position in `reproject_geometry` ([#24](https://github.com/pjhartzell/raster-footprint/pull/24))
+- Moved `geometry` argument to first position in `reproject_geometry` ([#24](https://github.com/pjhartzell/raster-footprint/pull/24))
 
 ## [0.1.0] - 2023-08-13
 
