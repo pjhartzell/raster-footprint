@@ -1,14 +1,17 @@
-from typing import Any, List, Optional, Tuple, TypeVar
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 from shapely.geometry.multipolygon import MultiPolygon
 from shapely.geometry.polygon import Polygon
 
-T = TypeVar("T", Polygon, MultiPolygon)
+from .constants import DEFAULT_PRECISION, T
 
 
 def densify_by_factor(
-    point_list: List[Tuple[float, float]], factor: int
+    point_list: List[Tuple[float, float]],
+    factor: int,
+    *,
+    precision: int = DEFAULT_PRECISION,
 ) -> List[Tuple[float, float]]:
     """Increases the number of points in a list by a factor.
 
@@ -24,6 +27,8 @@ def densify_by_factor(
         point_list (List[Tuple[float, float]]): The list of points to be
             densified.
         factor (int): The factor by which to densify the points.
+        precision (Optional[int]): The number of decimal places to include in
+            the point coordinates. Defaults to 7.
 
     Returns:
         List[Tuple[float, float]]: The densified point list.
@@ -32,13 +37,20 @@ def densify_by_factor(
     densified_number = len(points) * factor
     existing_indices = np.arange(0, densified_number, factor)
     interp_indices = np.arange(existing_indices[-1] + 1)
-    interp_x = np.interp(interp_indices, existing_indices, points[:, 0])
-    interp_y = np.interp(interp_indices, existing_indices, points[:, 1])
+    interp_x = np.round(
+        np.interp(interp_indices, existing_indices, points[:, 0]), decimals=precision
+    )
+    interp_y = np.round(
+        np.interp(interp_indices, existing_indices, points[:, 1]), decimals=precision
+    )
     return [(x, y) for x, y in zip(interp_x, interp_y)]
 
 
 def densify_by_distance(
-    point_list: List[Tuple[float, float]], distance: float
+    point_list: List[Tuple[float, float]],
+    distance: float,
+    *,
+    precision: int = DEFAULT_PRECISION,
 ) -> List[Tuple[float, float]]:
     """Increases the number of points in a list according to a distance interval.
 
@@ -55,6 +67,8 @@ def densify_by_distance(
         point_list (List[Tuple[float, float]]): The list of points to be
             densified.
         distance (float): The interval at which to insert additional points.
+        precision (Optional[int]): The number of decimal places to include in
+            the point coordinates. Defaults to 7.
 
     Returns:
         List[Tuple[float, float]]: The densified point list.
@@ -71,7 +85,9 @@ def densify_by_distance(
             np.array((step, step)).T * coordinate_steps[index] + points[index]
         )
     final_point = points[-1].reshape(1, -1)
-    densified_array = np.concatenate((*densified_points, final_point), axis=0)
+    densified_array = np.round(
+        np.concatenate((*densified_points, final_point), axis=0), decimals=precision
+    )
     return [(float(row[0]), float(row[1])) for row in densified_array]
 
 
@@ -80,6 +96,7 @@ def densify_polygon(
     *,
     factor: Optional[int] = None,
     distance: Optional[float] = None,
+    precision: int = DEFAULT_PRECISION,
 ) -> Polygon:
     """Adds vertices to a polygon.
 
@@ -95,6 +112,8 @@ def densify_polygon(
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices. Mutually
             exclusive with ``factor``. Defaults to ``None``.
+        precision (Optional[int]): The number of decimal places to include in
+            the densified polygon vertex coordinates. Defaults to 7.
 
     Returns:
         Polygon: The densified polygon.
@@ -102,15 +121,18 @@ def densify_polygon(
     if factor is not None and distance is not None:
         raise ValueError("Only one of 'factor' or 'distance' can be specified.")
     if factor is not None:
-        shell = densify_by_factor(polygon.exterior.coords, factor)
+        shell = densify_by_factor(polygon.exterior.coords, factor, precision=precision)
         holes = [
-            densify_by_factor(interior.coords, factor) for interior in polygon.interiors
+            densify_by_factor(interior.coords, factor, precision=precision)
+            for interior in polygon.interiors
         ]
         return Polygon(shell=shell, holes=holes)
     elif distance is not None:
-        shell = densify_by_distance(polygon.exterior.coords, distance)
+        shell = densify_by_distance(
+            polygon.exterior.coords, distance, precision=precision
+        )
         holes = [
-            densify_by_distance(interior.coords, distance)
+            densify_by_distance(interior.coords, distance, precision=precision)
             for interior in polygon.interiors
         ]
         return Polygon(shell=shell, holes=holes)
@@ -123,6 +145,7 @@ def densify_multipolygon(
     *,
     factor: Optional[int] = None,
     distance: Optional[float] = None,
+    precision: int = DEFAULT_PRECISION,
 ) -> MultiPolygon:
     """Adds vertices to each polygon in a multipolygon.
 
@@ -138,12 +161,14 @@ def densify_multipolygon(
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices.  Mutually
             exclusive with ``factor``. Defaults to ``None``.
+        precision (Optional[int]): The number of decimal places to include in
+            the densified multipolygon vertex coordinates. Defaults to 7.
 
     Returns:
         MultiPolygon: The densified multipolygon.
     """
     densified_polygons = [
-        densify_polygon(polygon, factor=factor, distance=distance)
+        densify_polygon(polygon, factor=factor, distance=distance, precision=precision)
         for polygon in multipolygon.geoms
     ]
     return MultiPolygon(densified_polygons)
@@ -154,6 +179,7 @@ def densify_geometry(
     *,
     factor: Optional[int] = None,
     distance: Optional[float] = None,
+    precision: int = DEFAULT_PRECISION,
 ) -> T:
     """Adds vertices to a polygon or each polygon in a multipolygon.
 
@@ -166,13 +192,19 @@ def densify_geometry(
             polygon vertices, e.g., a ``distance`` of 2 will insert a new vertex
             every 2 units of distance between existing vertices. Mutually
             exclusive with ``factor``. Defaults to ``None``.
+        precision (Optional[int]): The number of decimal places to include in
+            the densified geometry coordinates. Defaults to 7.
 
     Returns:
         T: The densified polygon or multipolygon.
     """
     if isinstance(geometry, Polygon):
-        return densify_polygon(geometry, factor=factor, distance=distance)
+        return densify_polygon(
+            geometry, factor=factor, distance=distance, precision=precision
+        )
     elif isinstance(geometry, MultiPolygon):
-        return densify_multipolygon(geometry, factor=factor, distance=distance)
+        return densify_multipolygon(
+            geometry, factor=factor, distance=distance, precision=precision
+        )
     else:
         raise TypeError("geometry must be a Polygon or MultiPolygon")
