@@ -49,7 +49,7 @@ def get_mask_geometry(
     *,
     transform: Affine = Affine(1, 0, 0, 0, 1, 0),
     convex_hull: bool = False,
-    holes: bool = True,
+    holes: bool = False,
 ) -> Optional[Union[Polygon, MultiPolygon]]:
     """Creates a polygon or multipolygon surrounding valid data pixels.
 

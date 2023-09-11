@@ -1,11 +1,10 @@
 import numpy as np
 import numpy.typing as npt
 import pytest
-from rasterio import Affine
-from shapely.geometry import shape
-
 from raster_footprint import create_mask
 from raster_footprint.mask import get_mask_geometry
+from rasterio import Affine
+from shapely.geometry import shape
 
 from .conftest import read_geojson
 
@@ -124,7 +123,9 @@ def test_geometry_convex_hull_of_two_concave_shells(
 def test_geometry_two_concave_shells_with_holes(
     two_concave_shells_with_holes: npt.NDArray[np.uint8],
 ) -> None:
-    geometry = get_mask_geometry(two_concave_shells_with_holes, transform=TRANSFORM)
+    geometry = get_mask_geometry(
+        two_concave_shells_with_holes, transform=TRANSFORM, holes=True
+    )
     expected = read_geojson("two-concave-shells-with-holes")
     assert shape(geometry).normalize() == shape(expected).normalize()
 
@@ -142,8 +143,6 @@ def test_geometry_convex_hull_of_two_concave_shells_with_holes(
 def test_geometry_two_concave_shells_with_holes_filled(
     two_concave_shells_with_holes: npt.NDArray[np.uint8],
 ) -> None:
-    geometry = get_mask_geometry(
-        two_concave_shells_with_holes, transform=TRANSFORM, holes=False
-    )
+    geometry = get_mask_geometry(two_concave_shells_with_holes, transform=TRANSFORM)
     expected = read_geojson("two-concave-shells")
     assert shape(geometry).normalize() == shape(expected).normalize()

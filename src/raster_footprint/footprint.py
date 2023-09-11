@@ -26,7 +26,7 @@ def footprint_from_mask(
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
     convex_hull: bool = False,
-    holes: bool = True,
+    holes: bool = False,
 ) -> Optional[Dict[str, Any]]:
     """Produces a GeoJSON dictionary containing a polygon or multipolygon geometry
     surrounding valid data locations in the given ``mask`` array.
@@ -66,7 +66,7 @@ def footprint_from_mask(
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
         holes (bool): Whether to include holes in the created polygons. Has
-            no effect if ``convex_hull`` is True. Defaults to True.
+            no effect if ``convex_hull`` is True. Defaults to False.
 
     Returns:
         Optional[Dict[str, Any]]: A GeoJSON dictionary containing the
@@ -102,7 +102,7 @@ def footprint_from_data(
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
     convex_hull: bool = False,
-    holes: bool = True,
+    holes: bool = False,
 ) -> Optional[Dict[str, Any]]:
     """Produces a GeoJSON dictionary containing a polygon or multipolygon
     surrounding valid data locations in the given ``data`` array.
@@ -137,7 +137,7 @@ def footprint_from_data(
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
         holes (bool): Whether to include holes in the created polygons. Has
-            no effect if ``convex_hull`` is True. Defaults to True.
+            no effect if ``convex_hull`` is True. Defaults to False.
 
     Returns:
         Optional[Dict[str, Any]]: A GeoJSON dictionary containing the
@@ -168,7 +168,7 @@ def footprint_from_href(
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
     convex_hull: bool = False,
-    holes: bool = True,
+    holes: bool = False,
     bands: Optional[List[int]] = None,
     with_nodata: bool = False,
 ) -> Optional[Dict[str, Any]]:
@@ -207,7 +207,7 @@ def footprint_from_href(
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
         holes (bool): Whether to include holes in the created polygons. Has
-            no effect if ``convex_hull`` is True. Defaults to True.
+            no effect if ``convex_hull`` is True. Defaults to False.
         with_nodata (bool): If True, a footprint for the entire raster,
             including nodata pixels, is returned. Defaults to False.
         bands (List[int]): The bands to use to compute the footprint.
@@ -245,7 +245,7 @@ def footprint_from_rasterio_reader(
     densify_distance: Optional[float] = None,
     simplify_tolerance: Optional[float] = None,
     convex_hull: bool = False,
-    holes: bool = True,
+    holes: bool = False,
     bands: Optional[List[int]] = None,
     with_nodata: bool = False,
 ) -> Optional[Dict[str, Any]]:
@@ -282,7 +282,7 @@ def footprint_from_rasterio_reader(
             polygons. The convex hull is applied prior to densification and
             simplification. Defaults to False.
         holes (bool): Whether to include holes in the created polygons. Has
-            no effect if ``convex_hull`` is True. Defaults to True.
+            no effect if ``convex_hull`` is True. Defaults to False.
         with_nodata (bool): If True, a footprint for the entire raster,
             including nodata pixels, is returned. Defaults to False.
         bands (List[int]): The bands to use to compute the footprint.
