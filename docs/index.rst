@@ -8,7 +8,7 @@
 raster-footprint
 ================
 
-A Python package for creating GeoJSON_ geometries that bound valid data in a geospatial
+A Python package for creating GeoJSON_ geometries that bound valid data in geospatial
 rasters.
 
 

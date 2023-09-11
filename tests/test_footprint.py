@@ -58,11 +58,13 @@ def test_modis(modis_href_data_crs_transform: HrefDataCrsTransform) -> None:
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis.json")
 
-    href_footprint = footprint_from_href(href)
+    href_footprint = footprint_from_href(href, holes=True)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
-    data_footprint = footprint_from_data(data_array, transform, crs, nodata=32767)
+    data_footprint = footprint_from_data(
+        data_array, transform, crs, nodata=32767, holes=True
+    )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
 
@@ -84,12 +86,12 @@ def test_modis_precision(modis_href_data_crs_transform: HrefDataCrsTransform) ->
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-precision-1.json")
 
-    href_footprint = footprint_from_href(href, precision=1)
+    href_footprint = footprint_from_href(href, precision=1, holes=True)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, transform, crs, nodata=32767, precision=1
+        data_array, transform, crs, nodata=32767, precision=1, holes=True
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -101,12 +103,12 @@ def test_modis_densify_factor(
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-densify_factor-2.json")
 
-    href_footprint = footprint_from_href(href, densify_factor=2)
+    href_footprint = footprint_from_href(href, densify_factor=2, holes=True)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, transform, crs, nodata=32767, densify_factor=2
+        data_array, transform, crs, nodata=32767, densify_factor=2, holes=True
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -118,12 +120,12 @@ def test_modis_densify_distance(
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-densify_distance-100000.json")
 
-    href_footprint = footprint_from_href(href, densify_distance=100000)
+    href_footprint = footprint_from_href(href, densify_distance=100000, holes=True)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, transform, crs, nodata=32767, densify_distance=100000
+        data_array, transform, crs, nodata=32767, densify_distance=100000, holes=True
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -135,12 +137,12 @@ def test_modis_simplify_tolerance(
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-simplify_tolerance-0.05.json")
 
-    href_footprint = footprint_from_href(href, simplify_tolerance=0.05)
+    href_footprint = footprint_from_href(href, simplify_tolerance=0.05, holes=True)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
     data_footprint = footprint_from_data(
-        data_array, transform, crs, nodata=32767, simplify_tolerance=0.05
+        data_array, transform, crs, nodata=32767, simplify_tolerance=0.05, holes=True
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -155,7 +157,7 @@ def test_modis_densify_distance_and_simplify_tolerance(
     )
 
     href_footprint = footprint_from_href(
-        href, densify_distance=100000, simplify_tolerance=0.01
+        href, densify_distance=100000, simplify_tolerance=0.01, holes=True
     )
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
@@ -167,6 +169,7 @@ def test_modis_densify_distance_and_simplify_tolerance(
         nodata=32767,
         densify_distance=100000,
         simplify_tolerance=0.01,
+        holes=True,
     )
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
@@ -191,13 +194,11 @@ def test_modis_no_holes(modis_href_data_crs_transform: HrefDataCrsTransform) -> 
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-no_holes.json")
 
-    href_footprint = footprint_from_href(href, holes=False)
+    href_footprint = footprint_from_href(href)
     check_winding(href_footprint)
     assert shape(href_footprint).normalize() == shape(expected).normalize()
 
-    data_footprint = footprint_from_data(
-        data_array, transform, crs, nodata=32767, holes=False
-    )
+    data_footprint = footprint_from_data(data_array, transform, crs, nodata=32767)
     check_winding(data_footprint)
     assert shape(data_footprint).normalize() == shape(expected).normalize()
 
