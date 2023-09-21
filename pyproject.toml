@@ -13,6 +13,9 @@ classifiers = [
 ]
 dependencies = ["rasterio>=1.3", "shapely>=2.0"]
 
+[project.scripts]
+rf = "raster_footprint.cli:cli"
+
 [project.urls]
 Documentation = "https://raster-footprint.readthedocs.io"
 GitHub = "https://github.com/pjhartzell/raster-footprint"
