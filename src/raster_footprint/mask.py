@@ -66,7 +66,7 @@ def get_mask_geometry(
         convex_hull (bool): Whether to return the convex hull of the created
             polygons. Defaults to False.
         holes (bool): Whether to include holes in the created polygons. Has
-            no effect if ``convex_hull`` is True. Defaults to True.
+            no effect if ``convex_hull`` is True. Defaults to False.
 
     Returns:
         Optional[Union[Polygon, MultiPolygon]: A polygon or multipolygon
