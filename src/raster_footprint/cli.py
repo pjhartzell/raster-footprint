@@ -1,5 +1,3 @@
-# ruff: noqa: E501
-
 import argparse
 import json
 import os
