@@ -14,11 +14,11 @@ Create GeoJSON geometries that bound valid raster data. Depends on [rasterio](ht
 pip install raster-footprint
 ```
 
-Create or manipulate GeoJSON using the `rf` command:
+Create or manipulate GeoJSON with the CLI:
 
 ```shell
-$ rf --help
-usage: rf [-h] {create,densify,reproject,simplify} ...
+raster-footprint --help
+usage: raster-footprint [-h] {create,densify,reproject,simplify} ...
 
 options:
   -h, --help            show this help message and exit
@@ -31,7 +31,7 @@ commands:
     simplify            Simplify a Polygon or MultiPolygon
 ```
 
-Use the raster-footprint functions in your Python script:
+Import `raster_footprint` functions into your Python script:
 
 ```Python
 from raster_footprint import footprint_from_href

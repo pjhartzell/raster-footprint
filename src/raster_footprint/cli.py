@@ -70,7 +70,7 @@ def simplify(args) -> None:
 
 def cli() -> None:
     # fmt: off
-    parser = argparse.ArgumentParser(prog="rf")
+    parser = argparse.ArgumentParser(prog="raster-footprint")
     subparsers = parser.add_subparsers(title="commands", required=True)
 
     # create footprint

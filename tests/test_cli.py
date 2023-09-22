@@ -21,7 +21,7 @@ def test_cli_create() -> None:
         outfile = os.path.join(tmp_dir, "from_href.json")
         subprocess.run(
             [
-                "rf",
+                "raster-footprint",
                 "create",
                 infile,
                 "--outfile",
@@ -58,7 +58,7 @@ def test_cli_densify() -> None:
         outfile_factor = os.path.join(tmp_dir, "densified_by_factor.json")
         subprocess.run(
             [
-                "rf",
+                "raster-footprint",
                 "densify",
                 infile,
                 "--outfile",
@@ -77,7 +77,7 @@ def test_cli_densify() -> None:
         outfile_distance = os.path.join(tmp_dir, "densified_by_distance.json")
         subprocess.run(
             [
-                "rf",
+                "raster-footprint",
                 "densify",
                 infile,
                 "--outfile",
@@ -108,7 +108,7 @@ def test_cli_reproject() -> None:
         outfile = os.path.join(tmp_dir, "reprojected.json")
         subprocess.run(
             [
-                "rf",
+                "raster-footprint",
                 "reproject",
                 infile,
                 str(source_epsg),
@@ -141,7 +141,7 @@ def test_cli_simplify() -> None:
         outfile = os.path.join(tmp_dir, "simplified.json")
         subprocess.run(
             [
-                "rf",
+                "raster-footprint",
                 "simplify",
                 infile,
                 "--outfile",
