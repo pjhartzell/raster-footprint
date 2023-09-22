@@ -6,7 +6,7 @@
 
 [![GitHub](https://img.shields.io/github/license/pjhartzell/raster-footprint?style=for-the-badge)](https://github.com/pjhartzell/raster-footprint/blob/main/LICENSE)
 
-Create GeoJSON geometries that bound valid (not "nodata" pixels) raster data. Depends on [rasterio](https://rasterio.readthedocs.io/en/stable/) and [shapely](https://shapely.readthedocs.io/en/stable/manual.html).
+Create GeoJSON geometries that bound valid raster data. Depends on [rasterio](https://rasterio.readthedocs.io/en/stable/) and [shapely](https://shapely.readthedocs.io/en/stable/manual.html).
 
 ## Usage
 
@@ -14,9 +14,26 @@ Create GeoJSON geometries that bound valid (not "nodata" pixels) raster data. De
 pip install raster-footprint
 ```
 
-Import and call one of the footprint functions with some options:
+Create or manipulate GeoJSON with the CLI:
 
-```python
+```shell
+raster-footprint --help
+usage: raster-footprint [-h] {create,densify,reproject,simplify} ...
+
+options:
+  -h, --help            show this help message and exit
+
+commands:
+  {create,densify,reproject,simplify}
+    create              Create a raster footprint
+    densify             Densify a Polygon or MultiPolygon
+    reproject           Reproject a Polygon or MultiPolygon
+    simplify            Simplify a Polygon or MultiPolygon
+```
+
+Import `raster_footprint` functions into your Python script:
+
+```Python
 from raster_footprint import footprint_from_href
 
 footprint = footprint_from_href(

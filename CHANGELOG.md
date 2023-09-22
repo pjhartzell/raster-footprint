@@ -9,6 +9,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added a CLI ([#27](https://github.com/pjhartzell/raster-footprint/issues/27))
 - Added a `precision` option to the densify functions
   ([#25](https://github.com/pjhartzell/raster-footprint/issues/25))
 

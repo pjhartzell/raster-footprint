@@ -13,6 +13,9 @@ classifiers = [
 ]
 dependencies = ["rasterio>=1.3", "shapely>=2.0"]
 
+[project.scripts]
+raster-footprint = "raster_footprint._cli:cli"
+
 [project.urls]
 Documentation = "https://raster-footprint.readthedocs.io"
 GitHub = "https://github.com/pjhartzell/raster-footprint"
@@ -37,6 +40,9 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.per-file-ignores]
+"src/raster_footprint/_cli.py" = ["E501"]
 
 [tool.black]
 line-length = 88
