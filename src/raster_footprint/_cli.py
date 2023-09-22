@@ -1,3 +1,6 @@
+"""This is a "private" module that is not part of our public API. The interfaces in this
+module can change at any time without warning."""
+
 import argparse
 import json
 import os
