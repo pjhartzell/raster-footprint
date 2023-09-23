@@ -1,6 +1,6 @@
 [project]
 name = "raster-footprint"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{ name = "Preston Hartzell", email = "preston.hartzell@gmail.com" }]
 description = "Create GeoJSON geometries that bound the extents of valid data in a raster."
 readme = "README.md"
