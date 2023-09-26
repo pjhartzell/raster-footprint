@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Nothing.
+
+## [0.2.0] - 2023-09-22
+
 ### Added
 
 - Added a CLI ([#27](https://github.com/pjhartzell/raster-footprint/issues/27))
@@ -24,5 +28,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 Initial release.
 
-[unreleased]: https://github.com/pjhartzell/raster-footprint/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pjhartzell/raster-footprint/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pjhartzell/raster-footprint/releases/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pjhartzell/raster-footprint/releases/tag/v0.1.0
