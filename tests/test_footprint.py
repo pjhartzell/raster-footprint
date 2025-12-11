@@ -22,6 +22,9 @@ from .conftest import TEST_DATA_DIRECTORY, check_winding, read_geojson
 
 HrefDataCrsTransform = Tuple[str, npt.NDArray[np.uint8], CRS, Affine]
 
+# Tolerance for geometry comparison to handle precision differences in library versions
+GEOMETRY_COMPARISON_TOLERANCE = 0.0001  # 0.01%
+
 ASTER_HREF = str(
     Path(
         TEST_DATA_DIRECTORY,
@@ -136,15 +139,16 @@ def test_modis_simplify_tolerance(
 ) -> None:
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-simplify_tolerance-0.05.json")
+    expected_geom = shape(expected)
 
     href_footprint = footprint_from_href(href, simplify_tolerance=0.05, holes=True)
     check_winding(href_footprint)
     # Use symmetric difference to handle precision differences in newer library versions
     href_geom = shape(href_footprint)
-    expected_geom = shape(expected)
     sym_diff = href_geom.symmetric_difference(expected_geom)
-    # Assert symmetric difference is less than 0.01% of the expected area
-    assert sym_diff.area / expected_geom.area < 0.0001
+    # Assert symmetric difference is less than tolerance % of the expected area
+    assert expected_geom.area > 0, "Expected geometry has zero area"
+    assert sym_diff.area / expected_geom.area < GEOMETRY_COMPARISON_TOLERANCE
 
     data_footprint = footprint_from_data(
         data_array, transform, crs, nodata=32767, simplify_tolerance=0.05, holes=True
@@ -152,8 +156,8 @@ def test_modis_simplify_tolerance(
     check_winding(data_footprint)
     data_geom = shape(data_footprint)
     sym_diff = data_geom.symmetric_difference(expected_geom)
-    # Assert symmetric difference is less than 0.01% of the expected area
-    assert sym_diff.area / expected_geom.area < 0.0001
+    # Assert symmetric difference is less than tolerance % of the expected area
+    assert sym_diff.area / expected_geom.area < GEOMETRY_COMPARISON_TOLERANCE
 
 
 def test_modis_densify_distance_and_simplify_tolerance(
