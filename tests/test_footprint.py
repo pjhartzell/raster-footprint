@@ -139,13 +139,21 @@ def test_modis_simplify_tolerance(
 
     href_footprint = footprint_from_href(href, simplify_tolerance=0.05, holes=True)
     check_winding(href_footprint)
-    assert shape(href_footprint).normalize() == shape(expected).normalize()
+    # Use symmetric difference to handle precision differences in newer library versions
+    href_geom = shape(href_footprint)
+    expected_geom = shape(expected)
+    sym_diff = href_geom.symmetric_difference(expected_geom)
+    # Assert symmetric difference is less than 0.01% of the expected area
+    assert sym_diff.area / expected_geom.area < 0.0001
 
     data_footprint = footprint_from_data(
         data_array, transform, crs, nodata=32767, simplify_tolerance=0.05, holes=True
     )
     check_winding(data_footprint)
-    assert shape(data_footprint).normalize() == shape(expected).normalize()
+    data_geom = shape(data_footprint)
+    sym_diff = data_geom.symmetric_difference(expected_geom)
+    # Assert symmetric difference is less than 0.01% of the expected area
+    assert sym_diff.area / expected_geom.area < 0.0001
 
 
 def test_modis_densify_distance_and_simplify_tolerance(
