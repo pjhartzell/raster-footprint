@@ -48,12 +48,24 @@ See the [API documentation](https://raster-footprint.readthedocs.io/) for availa
 
 ## Developing
 
-Clone and install in editable mode with the development optional dependencies:
+Clone and install in editable mode with the development optional dependencies using [uv](https://docs.astral.sh/uv/):
 
 ```shell
 git clone https://github.com/pjhartzell/raster-footprint
 cd raster-footprint
+uv pip install -e ".[dev,docs]"
+```
+
+Or with pip:
+
+```shell
 pip install -e ".[dev,docs]"
+```
+
+We use [pre-commit](https://pre-commit.com/) with local hooks. Install the hooks with:
+
+```shell
+pre-commit install
 ```
 
 We use [pytest](https://docs.pytest.org/) for tests:
