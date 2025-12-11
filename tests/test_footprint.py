@@ -23,7 +23,7 @@ from .conftest import TEST_DATA_DIRECTORY, check_winding, read_geojson
 HrefDataCrsTransform = Tuple[str, npt.NDArray[np.uint8], CRS, Affine]
 
 # Tolerance for geometry comparison to handle precision differences in library versions
-GEOMETRY_COMPARISON_TOLERANCE = 0.0001  # 0.01%
+GEOMETRY_COMPARISON_TOLERANCE = 0.0001  # 0.01% (as decimal)
 
 ASTER_HREF = str(
     Path(
@@ -140,6 +140,8 @@ def test_modis_simplify_tolerance(
     href, data_array, crs, transform = modis_href_data_crs_transform
     expected = read_geojson("modis-simplify_tolerance-0.05.json")
     expected_geom = shape(expected)
+    # Guard against division by zero
+    assert expected_geom.area > 0, "Expected geometry has zero area"
 
     href_footprint = footprint_from_href(href, simplify_tolerance=0.05, holes=True)
     check_winding(href_footprint)
@@ -147,7 +149,6 @@ def test_modis_simplify_tolerance(
     href_geom = shape(href_footprint)
     sym_diff = href_geom.symmetric_difference(expected_geom)
     # Assert symmetric difference is less than tolerance % of the expected area
-    assert expected_geom.area > 0, "Expected geometry has zero area"
     assert sym_diff.area / expected_geom.area < GEOMETRY_COMPARISON_TOLERANCE
 
     data_footprint = footprint_from_data(
