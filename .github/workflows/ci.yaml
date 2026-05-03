@@ -24,7 +24,7 @@ jobs:
         with:
           enable-cache: true
       - name: Sync environment
-        run: uv sync --frozen --python ${{ matrix.python-version }}
+        run: uv sync --locked --python ${{ matrix.python-version }}
       - name: Check with pre-commit
         run: uv run pre-commit run --all-files
       - name: Run tests
@@ -54,6 +54,6 @@ jobs:
         with:
           enable-cache: true
       - name: Sync environment with docs group
-        run: uv sync --frozen --no-default-groups --group docs --python 3.13
+        run: uv sync --locked --no-default-groups --group docs --python 3.13
       - name: Build docs
         run: uv run sphinx-build -W docs docs/_build/html
