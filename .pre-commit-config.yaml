@@ -1,5 +1,8 @@
 # Configuration file for pre-commit (https://pre-commit.com/).
-# Hooks run against the dev environment installed by `uv sync`.
+# Local hooks run against the dev environment installed by `uv sync`.
+# Upstream hooks are used only for check-only / deterministic-trim
+# helpers that don't have a Python equivalent and don't suffer from
+# the formatter version-drift problem.
 # Run `uv run pre-commit run --all-files` when adding or changing entries.
 
 repos:
@@ -26,3 +29,15 @@ repos:
         language: system
         pass_filenames: false
         args: ["src/", "tests/"]
+      - id: yamllint
+        name: yamllint
+        entry: yamllint
+        language: system
+        types: [yaml]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
