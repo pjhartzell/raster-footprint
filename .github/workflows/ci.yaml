@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
 
 jobs:
@@ -15,55 +15,51 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
-      - name: Install with dev dependencies
-        run: pip install .[dev]
+          enable-cache: true
+      - name: Sync environment
+        run: uv sync --frozen --python ${{ matrix.python-version }}
       - name: Check with pre-commit
-        run: pre-commit run --all-files
+        run: uv run pre-commit run --all-files
       - name: Run tests
-        run: pytest
+        run: uv run pytest
+
   min-dependencies:
     runs-on: ubuntu-latest
     steps:
-      - name: Chekcout
-        uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.8"
-          cache: "pip"
+          enable-cache: true
       - name: Install geos
         run: sudo apt-get install libgeos-dev
-      - name: Install with dev dependencies
-        run: pip install .[dev]
+      - name: Sync environment
+        run: uv sync --frozen --python 3.10
       - name: Install minimum versions of dependencies
-        run: scripts/install-min-dependencies
+        run: uv run scripts/install-min-dependencies
       - name: Check with pre-commit
-        run: pre-commit run --all-files
+        run: uv run pre-commit run --all-files
       - name: Run tests
-        run: pytest
+        run: uv run pytest
+
   docs:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -el {0}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.11"
-          cache: "pip"
-      - name: Install with docs dependencies
-        run: pip install .[docs]
-      - name: Check docs
-        run: sphinx-build -W docs docs/_build/html
+          enable-cache: true
+      - name: Sync environment with docs group
+        run: uv sync --frozen --no-default-groups --group docs --python 3.13
+      - name: Build docs
+        run: uv run sphinx-build -W docs docs/_build/html
