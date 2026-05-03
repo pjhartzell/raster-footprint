@@ -39,14 +39,8 @@ jobs:
         uses: astral-sh/setup-uv@v4
         with:
           enable-cache: true
-      - name: Install geos
-        run: sudo apt-get install libgeos-dev
-      - name: Sync environment
-        run: uv sync --frozen --python 3.10
-      - name: Install minimum versions of dependencies
-        run: uv run scripts/install-min-dependencies
-      - name: Check with pre-commit
-        run: uv run pre-commit run --all-files
+      - name: Sync environment at lowest direct versions
+        run: uv sync --resolution lowest-direct --python 3.10
       - name: Run tests
         run: uv run pytest
 

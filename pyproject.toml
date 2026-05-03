@@ -33,7 +33,6 @@ dev = [
     "pytest~=9.0",
     "ruff==0.15.12",
     "sphinx-autobuild~=2024.10",
-    "tomli~=2.0; python_version<'3.11'",
 ]
 docs = [
     "pydata-sphinx-theme~=0.16.0",
