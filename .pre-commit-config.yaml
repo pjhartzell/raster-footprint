@@ -1,22 +1,43 @@
 # Configuration file for pre-commit (https://pre-commit.com/).
-# Please run `pre-commit run --all-files` when adding or changing entries.
+# Local hooks run against the dev environment installed by `uv sync`.
+# Upstream hooks are used only for check-only / deterministic-trim
+# helpers that don't have a Python equivalent and don't suffer from
+# the formatter version-drift problem.
+# Run `uv run pre-commit run --all-files` when adding or changing entries.
 
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.291
+  - repo: local
     hooks:
       - id: ruff
-  - repo: https://github.com/psf/black
-    rev: 23.9.1
-    hooks:
-      - id: black
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
-    hooks:
+        name: ruff
+        entry: ruff check --fix
+        language: system
+        types: [python]
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format
+        language: system
+        types: [python]
       - id: codespell
+        name: codespell
+        entry: codespell
+        language: system
         types_or: [markdown, python, shell]
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
-    hooks:
       - id: mypy
-        files: ".*\\.py$"
+        name: mypy
+        entry: mypy
+        language: system
+        pass_filenames: false
+        args: ["src/", "tests/"]
+      - id: yamllint
+        name: yamllint
+        entry: yamllint
+        language: system
+        types: [yaml]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict

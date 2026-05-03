@@ -44,7 +44,7 @@ def test_simplify_multi_polygon_with_holes() -> None:
     check_winding(simplified)
     assert simplified.normalize() == expected.normalize()
 
-    # large tolerance simplifes shells, removes holes
+    # large tolerance simplifies shells, removes holes
     simplified = simplify_geometry(multi_polygon, tolerance=1.1)
     expected = shape(
         read_geojson("two-concave-shells-each-with-two-holes-simplified_1.1.json")

@@ -313,7 +313,7 @@ def footprint_from_rasterio_reader(
             mask = reader.read_masks(bands)
         else:
             mask = reader.read_masks(bands)
-            mask = np.sum(mask, axis=0, dtype=np.uint8)
+            mask = np.sum(mask, axis=0, dtype=np.uint8)  # type: ignore[assignment]
             mask[mask > 0] = 255
     else:
         if not bands:
