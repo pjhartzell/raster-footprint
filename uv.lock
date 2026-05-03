@@ -963,8 +963,8 @@ docs = [
 
 [package.metadata]
 requires-dist = [
-    { name = "rasterio", specifier = ">=1.3" },
-    { name = "shapely", specifier = ">=2.0" },
+    { name = "rasterio", specifier = ">=1.3.11" },
+    { name = "shapely", specifier = ">=2.0.4" },
 ]
 
 [package.metadata.requires-dev]

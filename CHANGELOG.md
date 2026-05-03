@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 - Modernized the development workflow around [uv](https://docs.astral.sh/uv/) and [ruff format](https://docs.astral.sh/ruff/formatter/); see [CONTRIBUTING.md](./CONTRIBUTING.md)
+- Bumped runtime dependency floors to versions that support NumPy 2: `rasterio>=1.3.11`, `shapely>=2.0.4`
 
 ### Removed
 
