@@ -83,7 +83,7 @@ uv run --group docs make -C docs html
 3. Tag `main` with `vX.Y.Z` and push the tag — the [release workflow](./.github/workflows/release.yaml) builds the package and publishes to PyPI.
 4. Create a GitHub [release](https://github.com/pjhartzell/raster-footprint/releases) for the tag.
 
-Versioning follows [semantic versioning](https://semver.org/); the public API is every importable function from the `raster_footprint` package.
+Versioning follows [semantic versioning](https://semver.org/).
 
 ## License
 
