@@ -27,7 +27,6 @@ Changelog = "https://github.com/pjhartzell/raster-footprint/blob/main/CHANGELOG.
 
 [dependency-groups]
 dev = [
-    "black~=26.3",
     "codespell~=2.4",
     "mypy~=1.20",
     "pre-commit~=4.6",
@@ -50,9 +49,6 @@ line-length = 88
 
 [tool.ruff.lint.per-file-ignores]
 "src/raster_footprint/_cli.py" = ["E501"]
-
-[tool.black]
-line-length = 88
 
 [[tool.mypy.overrides]]
 module = ["rasterio.*", "affine", "shapely.*"]
