@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-"""Installs the minimum version of all dependencies, with pip.
+"""Installs the minimum version of all runtime dependencies, with uv.
 
 Assumptions:
-- You've installed the development dependencies: `pip install '.[dev]'`
+- You've installed the development dependencies: `uv sync`
 - All of the dependencies in pyproject.toml are specified with `>=`
 """
 
@@ -13,26 +13,23 @@ from pathlib import Path
 
 from packaging.requirements import Requirement
 
-assert sys.version_info[0] == 3
-if sys.version_info[1] < 11:
-    import tomli as toml
+if sys.version_info >= (3, 11):
+    import tomllib
 else:
-    import tomllib as toml
-
+    import tomli as tomllib
 
 root = Path(__file__).parents[1]
 with open(root / "pyproject.toml", "rb") as f:
-    pyproject_toml = toml.load(f)
-requirements = []
-for install_requires in filter(
-    bool,
-    (i.strip() for i in pyproject_toml["project"]["dependencies"]),
-):
-    requirement = Requirement(install_requires)
-    assert len(requirement.specifier) == 1
-    specifier = list(requirement.specifier)[0]
-    assert specifier.operator == ">="
-    install_requires = install_requires.replace(">=", "==")
-    requirements.append(install_requires)
+    pyproject = tomllib.load(f)
 
-subprocess.run(["pip", "install", *requirements], check=True)
+requirements = []
+for spec in filter(bool, (s.strip() for s in pyproject["project"]["dependencies"])):
+    requirement = Requirement(spec)
+    if len(requirement.specifier) != 1:
+        raise SystemExit(f"expected a single version specifier in {spec!r}")
+    operator = next(iter(requirement.specifier)).operator
+    if operator != ">=":
+        raise SystemExit(f"expected `>=` in {spec!r}, found {operator!r}")
+    requirements.append(spec.replace(">=", "=="))
+
+subprocess.run(["uv", "pip", "install", "--system", *requirements], check=True)

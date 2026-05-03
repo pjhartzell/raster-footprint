@@ -1,22 +1,28 @@
 # Configuration file for pre-commit (https://pre-commit.com/).
-# Please run `pre-commit run --all-files` when adding or changing entries.
+# Hooks run against the dev environment installed by `uv sync`.
+# Run `uv run pre-commit run --all-files` when adding or changing entries.
 
 repos:
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.291
+  - repo: local
     hooks:
       - id: ruff
-  - repo: https://github.com/psf/black
-    rev: 23.9.1
-    hooks:
+        name: ruff
+        entry: ruff check --fix
+        language: system
+        types: [python]
       - id: black
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.5
-    hooks:
+        name: black
+        entry: black
+        language: system
+        types: [python]
       - id: codespell
+        name: codespell
+        entry: codespell
+        language: system
         types_or: [markdown, python, shell]
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.5.1
-    hooks:
       - id: mypy
-        files: ".*\\.py$"
+        name: mypy
+        entry: mypy
+        language: system
+        pass_filenames: false
+        args: ["src/", "tests/"]

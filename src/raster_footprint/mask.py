@@ -37,7 +37,7 @@ def create_mask(
             mask[~np.isnan(data_array)] = 1
         else:
             mask[data_array != nodata] = 1
-        mask = np.sum(mask, axis=0, dtype=np.uint8)
+        mask = np.sum(mask, axis=0, dtype=np.uint8)  # type: ignore[assignment]
         mask[mask > 0] = 255
     else:
         mask = np.full(array_shape[-2:], fill_value=255, dtype=np.uint8)
