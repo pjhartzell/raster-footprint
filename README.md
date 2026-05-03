@@ -48,24 +48,32 @@ See the [API documentation](https://raster-footprint.readthedocs.io/) for availa
 
 ## Developing
 
-Clone and install in editable mode with the development optional dependencies:
+This project uses [uv](https://docs.astral.sh/uv/) for dependency management. Install uv, clone the repo, then sync the dev environment:
 
 ```shell
 git clone https://github.com/pjhartzell/raster-footprint
 cd raster-footprint
-pip install -e ".[dev,docs]"
+uv sync
 ```
 
-We use [pytest](https://docs.pytest.org/) for tests:
+`uv sync` installs the project in editable mode along with the `dev` dependency group. To also install the `docs` group, use `uv sync --group docs`.
+
+Install the [pre-commit](https://pre-commit.com/) hooks (they run against the dev environment, so `uv sync` must come first):
 
 ```shell
-pytest
+uv run pre-commit install
 ```
 
-We use [Sphinx](https://www.sphinx-doc.org/) for docs:
+Run tests with [pytest](https://docs.pytest.org/):
 
 ```shell
-make -C docs html
+uv run pytest
+```
+
+Build docs with [Sphinx](https://www.sphinx-doc.org/):
+
+```shell
+uv run --group docs make -C docs html
 ```
 
 ## Contributing
