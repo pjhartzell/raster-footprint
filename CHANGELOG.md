@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+Nothing.
+
+## [0.3.0] - 2026-05-03
+
 ### Changed
 
 - Modernized the development workflow around [uv](https://docs.astral.sh/uv/) and [ruff format](https://docs.astral.sh/ruff/formatter/); see [CONTRIBUTING.md](./CONTRIBUTING.md)
@@ -31,6 +35,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 Initial release.
 
-[Unreleased]: https://github.com/pjhartzell/raster-footprint/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/pjhartzell/raster-footprint/releases/compare/v0.1.0...v0.2.0
+[Unreleased]: https://github.com/pjhartzell/raster-footprint/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/pjhartzell/raster-footprint/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/pjhartzell/raster-footprint/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pjhartzell/raster-footprint/releases/tag/v0.1.0
