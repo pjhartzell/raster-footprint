@@ -8,13 +8,13 @@
 
 Create GeoJSON geometries that bound valid raster data. Depends on [rasterio](https://rasterio.readthedocs.io/en/stable/) and [shapely](https://shapely.readthedocs.io/en/stable/manual.html).
 
-## Usage
+## Installation
 
 ```shell
 pip install raster-footprint
 ```
 
-Create or manipulate GeoJSON with the CLI:
+## CLI
 
 ```shell
 raster-footprint --help
@@ -31,7 +31,7 @@ commands:
     simplify            Simplify a Polygon or MultiPolygon
 ```
 
-Import `raster_footprint` functions into your Python script:
+## Python API
 
 ```Python
 from raster_footprint import footprint_from_href
@@ -76,9 +76,14 @@ Build docs with [Sphinx](https://www.sphinx-doc.org/):
 uv run --group docs make -C docs html
 ```
 
-## Contributing
+## Releasing
 
-Github [issues](https://github.com/pjhartzell/raster-footprint/issues) and [pull requests](https://github.com/pjhartzell/raster-footprint/pulls).
+1. On a `release/vX.Y.Z` branch, bump the version in [pyproject.toml](./pyproject.toml) and update the [CHANGELOG](./CHANGELOG.md).
+2. Open a PR and merge it to `main`.
+3. Tag `main` with `vX.Y.Z` and push the tag — the [release workflow](./.github/workflows/release.yaml) builds the package and publishes to PyPI.
+4. Create a GitHub [release](https://github.com/pjhartzell/raster-footprint/releases) for the tag.
+
+Versioning follows [semantic versioning](https://semver.org/); the public API is every importable function from the `raster_footprint` package.
 
 ## License
 
